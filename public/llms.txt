@@ -1,0 +1,13 @@
+# Genessa
+> AI visibility scoring platform
+
+## What Genessa does
+Genessa scans websites against 5 AI readability protocols and returns a score from 0-100.
+
+## Services
+- AI Visibility Score
+- Verified Badge
+- Consulting
+
+## Contact
+https://genessa.io
