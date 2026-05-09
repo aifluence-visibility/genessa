@@ -17,6 +17,7 @@ export function Nav() {
         <Link href="/how-it-works" className="no-underline font-medium text-[var(--fg-2)]">How it works</Link>
         <Link href="/directory" className="no-underline font-medium text-[var(--fg-2)]">Directory</Link>
         <Link href="/pricing" className="no-underline font-medium text-[var(--fg-2)]">Pricing</Link>
+        <Link href="/faq" className="no-underline font-medium text-[var(--fg-2)]">FAQ</Link>
       </div>
       <div className="hidden md:flex items-center gap-3">
         <Link href="#" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>
@@ -38,6 +39,7 @@ export function Nav() {
           <Link href="/how-it-works" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">How it works</Link>
           <Link href="/directory" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Directory</Link>
           <Link href="/pricing" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Pricing</Link>
+          <Link href="/faq" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">FAQ</Link>
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
             <Link href="#" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>
             <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">

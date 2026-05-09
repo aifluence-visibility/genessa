@@ -55,8 +55,8 @@ function checkSchema(html: string): CheckResult {
         status: "pass",
         points: weight,
         weight,
-        impact: "ChatGPT kaynak gösterme ihtimali artar",
-        action: `${valid} JSON-LD blok bulundu`,
+        impact: "Increases likelihood of ChatGPT citing your source",
+        action: `${valid} JSON-LD blocks found`,
       };
     }
   }
@@ -68,8 +68,8 @@ function checkSchema(html: string): CheckResult {
       status: "partial",
       points: Math.round(weight * 0.5),
       weight,
-      impact: "Microdata var ama JSON-LD tercih edilir",
-      action: "Ana sayfaya JSON-LD ekle → +13 puan",
+      impact: "Microdata found but JSON-LD is preferred",
+      action: "Add JSON-LD to homepage → +13 points",
     };
   }
 
@@ -78,8 +78,8 @@ function checkSchema(html: string): CheckResult {
     status: "fail",
     points: 0,
     weight,
-    impact: "AI botları içeriğini yapılandırılmış veri olmadan anlamakta zorlanıyor",
-    action: "Ana sayfaya JSON-LD ekle → +25 puan",
+    impact: "AI bots struggle to understand content without structured data",
+    action: "Add JSON-LD to homepage → +25 points",
   };
 }
 
@@ -95,8 +95,8 @@ async function checkLlmsTxt(domain: string): Promise<CheckResult> {
           status: "pass",
           points: weight,
           weight,
-          impact: "AI botları içeriğini doğrudan okuyabiliyor",
-          action: "llms.txt mevcut ve geçerli",
+          impact: "AI bots can read your content directly",
+          action: "llms.txt is present and valid",
         };
       }
     }
@@ -107,8 +107,8 @@ async function checkLlmsTxt(domain: string): Promise<CheckResult> {
     status: "fail",
     points: 0,
     weight,
-    impact: "AI botları içeriğini anlayamıyor",
-    action: "llms.txt dosyası oluştur → +20 puan",
+    impact: "AI bots cannot understand your content",
+    action: "Create llms.txt file → +20 points",
   };
 }
 
@@ -124,8 +124,8 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
         status: "fail",
         points: 0,
         weight,
-        impact: "robots.txt bulunamadı — AI botları erişim politikası belirsiz",
-        action: "robots.txt oluştur ve AI botlarına izin ver → +20 puan",
+        impact: "robots.txt not found — AI bot access policy unclear",
+        action: "Create robots.txt and allow AI bots → +20 points",
       };
     }
 
@@ -155,7 +155,7 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
     }
 
     if (blocked.length === 0) {
-      return { name: "Robots.txt", status: "pass", points: weight, weight, impact: "Tüm AI botlarına erişim açık", action: "robots.txt düzgün yapılandırılmış" };
+      return { name: "Robots.txt", status: "pass", points: weight, weight, impact: "All AI bots have access", action: "robots.txt is properly configured" };
     }
     if (allowed > 0) {
       return {
@@ -163,8 +163,8 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
         status: "partial",
         points: Math.round(weight * (allowed / bots.length)),
         weight,
-        impact: `${blocked.join(", ")} engelleniyor`,
-        action: `robots.txt'e ${blocked.join(", ")} Allow ekle → +${weight - Math.round(weight * (allowed / bots.length))} puan`,
+        impact: `${blocked.join(", ")} blocked`,
+        action: `Add ${blocked.join(", ")} Allow to robots.txt → +${weight - Math.round(weight * (allowed / bots.length))} points`,
       };
     }
 
@@ -173,11 +173,11 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
       status: "fail",
       points: 0,
       weight,
-      impact: "Tüm AI botları engelleniyor",
-      action: "robots.txt'e GPTBot: Allow ekle → +20 puan",
+      impact: "All AI bots are blocked",
+      action: "Add GPTBot: Allow to robots.txt → +20 points",
     };
   } catch {
-    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt okunamadı", action: "robots.txt oluştur → +20 puan" };
+    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt could not be read", action: "Create robots.txt → +20 points" };
   }
 }
 
@@ -198,7 +198,7 @@ function checkOpenGraph(html: string): CheckResult {
   }
 
   if (found === tags.length) {
-    return { name: "Open Graph", status: "pass", points: weight, weight, impact: "AI ve sosyal medya önizlemeleri tam", action: "Tüm OG etiketleri mevcut" };
+    return { name: "Open Graph", status: "pass", points: weight, weight, impact: "AI and social media previews are complete", action: "All OG tags present" };
   }
   if (found > 0) {
     return {
@@ -206,8 +206,8 @@ function checkOpenGraph(html: string): CheckResult {
       status: "partial",
       points: Math.round(weight * (found / tags.length)),
       weight,
-      impact: `Eksik: ${missing.join(", ")}`,
-      action: `${missing.join(", ")} ekle → +${weight - Math.round(weight * (found / tags.length))} puan`,
+      impact: `Missing: ${missing.join(", ")}`,
+      action: `Add ${missing.join(", ")} → +${weight - Math.round(weight * (found / tags.length))} points`,
     };
   }
   return {
@@ -215,8 +215,8 @@ function checkOpenGraph(html: string): CheckResult {
     status: "fail",
     points: 0,
     weight,
-    impact: "Open Graph etiketleri bulunamadı — AI ve sosyal paylaşımlarda önizleme yok",
-    action: "og:title, og:description, og:image ekle → +20 puan",
+    impact: "Open Graph tags missing — no preview for AI and social sharing",
+    action: "Add og:title, og:description, og:image → +20 points",
   };
 }
 
@@ -227,7 +227,7 @@ function checkEntityLinks(html: string): CheckResult {
   const total = wikidata + wikipedia;
 
   if (total >= 3) {
-    return { name: "Entity Links", status: "pass", points: weight, weight, impact: "AI varlık tanıma doğruluğu yüksek", action: `${total} entity link bulundu` };
+    return { name: "Entity Links", status: "pass", points: weight, weight, impact: "AI entity recognition accuracy is high", action: `${total} entity links found` };
   }
   if (total > 0) {
     return {
@@ -235,8 +235,8 @@ function checkEntityLinks(html: string): CheckResult {
       status: "partial",
       points: Math.round(weight * 0.5),
       weight,
-      impact: `${total} entity link bulundu, 3+ önerilir`,
-      action: `Wikidata/Wikipedia bağlantıları ekle → +${weight - Math.round(weight * 0.5)} puan`,
+      impact: `${total} entity links found, 3+ recommended`,
+      action: `Add Wikidata/Wikipedia links → +${weight - Math.round(weight * 0.5)} points`,
     };
   }
   return {
@@ -244,8 +244,8 @@ function checkEntityLinks(html: string): CheckResult {
     status: "fail",
     points: 0,
     weight,
-    impact: "Yapılandırılmış varlık bağlantısı yok — AI doğru kaynak eşlemesi yapamıyor",
-    action: "Wikidata veya Wikipedia bağlantıları ekle → +15 puan",
+    impact: "No structured entity links found — AI cannot map to authoritative sources",
+    action: "Add Wikidata or Wikipedia links → +15 points",
   };
 }
 

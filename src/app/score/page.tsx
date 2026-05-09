@@ -46,11 +46,6 @@ function ScorePageContent() {
     .filter((f) => f.gain > 0);
   const totalGain = fixes.reduce((s, f) => s + f.gain, 0);
 
-  const competitors = [
-    { name: "rival-one.com", score: 88 },
-    { name: "rival-two.com", score: 76 },
-    { name: "rival-three.com", score: 64 },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--fg)]">
@@ -171,54 +166,12 @@ function ScorePageContent() {
                 </div>
               </div>
 
-              {/* Network Vis */}
-              <div className="relative overflow-hidden rounded-[14px] border border-[var(--border)] bg-[var(--bg)] p-5 md:p-6 shadow-[var(--shadow-sm)]">
-                <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(50% 60% at 50% 50%, rgba(75,123,255,0.12) 0%, rgba(123,63,228,0) 70%)" }} />
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-base font-semibold tracking-[-0.01em]">Where AI cites you</div>
-                    <div className="eyebrow">Last 7 days</div>
-                  </div>
-                  <svg viewBox="0 0 600 240" className="w-full block" style={{ height: "auto", maxHeight: 200 }}>
-                    <defs><linearGradient id="ng2" x1="0" y1="0" x2="600" y2="240" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#2952E3" /><stop offset="1" stopColor="#7B3FE4" /></linearGradient></defs>
-                    {[[80,40],[160,30],[240,60],[440,40],[520,80],[560,160],[480,200],[360,210],[240,200],[120,180],[40,140]].map(([x, y], i) => (
-                      <line key={i} x1="300" y1="120" x2={x} y2={y} stroke="url(#ng2)" strokeWidth="1" opacity="0.7" />
-                    ))}
-                    {[[80,40,4],[160,30,3.5],[240,60,3],[440,40,4],[520,80,3.5],[560,160,4],[480,200,3.5],[360,210,3],[240,200,3.5],[120,180,3],[40,140,3.5]].map(([x, y, r], i) => (
-                      <g key={i}>
-                        <circle cx={x} cy={y} r={r} fill="url(#ng2)" />
-                        <circle cx={x} cy={y} r={r + 8} fill="url(#ng2)" opacity="0.15" />
-                      </g>
-                    ))}
-                    <circle cx="300" cy="120" r="22" fill="url(#ng2)" opacity="0.2" />
-                    <circle cx="300" cy="120" r="14" fill="url(#ng2)" />
-                    <circle cx="300" cy="120" r="5" fill="#fff" />
-                  </svg>
-                  <div className="flex gap-6 mt-2 text-xs text-[var(--fg-2)]" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                    <div><span className="text-[var(--fg-3)]">Citations</span>&nbsp;<strong className="text-[var(--fg)]">11</strong></div>
-                    <div><span className="text-[var(--fg-3)]">Surfaces</span>&nbsp;<strong className="text-[var(--fg)]">4</strong></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Competitor Bars */}
-            <div className="mt-5 p-4 md:p-5 rounded-[14px] border border-[var(--border)] bg-[var(--bg)] shadow-[var(--shadow-sm)]">
-              <div className="eyebrow mb-3.5 text-[var(--fg-3)]">Vs. competitors</div>
-              <div className="flex flex-col gap-3">
-                {[{ name: rawUrl, score, you: true }, ...competitors.map(c => ({ ...c, you: false }))].map((c) => (
-                  <div key={c.name} className="grid items-center gap-2 md:gap-3" style={{ gridTemplateColumns: "minmax(80px, 140px) 1fr 36px" }}>
-                    <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.you ? "var(--genessa-blue)" : "var(--border-strong)" }} />
-                      <span className="truncate text-[12px] md:text-[13px]" style={{ fontFamily: "var(--font-geist-mono)", color: c.you ? "var(--fg)" : "var(--fg-2)", fontWeight: c.you ? 600 : 400 }}>{c.name}</span>
-                      {c.you && <span className="hidden sm:inline shrink-0 text-[10px] px-1.5 py-0.5 rounded text-white font-semibold uppercase tracking-wide" style={{ fontFamily: "var(--font-geist-mono)", background: "var(--genessa-gradient)" }}>you</span>}
-                    </div>
-                    <div className="h-2.5 rounded-full bg-[var(--bg-muted)] overflow-hidden relative">
-                      <div className="absolute inset-0 rounded-full transition-[width] duration-600" style={{ width: `${c.score}%`, background: c.you ? "var(--genessa-gradient)" : "var(--border-strong)" }} />
-                    </div>
-                    <div className="text-[13px] font-semibold text-right" style={{ fontFamily: "var(--font-geist-mono)", color: c.you ? "var(--genessa-blue)" : "var(--fg-2)" }}>{c.score}</div>
-                  </div>
-                ))}
+              {/* Detailed Report CTA */}
+              <div className="flex flex-col items-center justify-center text-center rounded-[14px] border border-[var(--border)] bg-[var(--bg)] p-8 md:p-10 shadow-[var(--shadow-sm)]">
+                <div className="text-lg md:text-xl font-semibold tracking-[-0.02em] mb-2">Want to see where AI mentions you?</div>
+                <p className="text-sm text-[var(--fg-2)] leading-relaxed max-w-[400px] mb-5">Our detailed report tracks your brand across ChatGPT, Perplexity, Claude and Google AI Overviews.</p>
+                <Link href="/pricing" className="no-underline text-sm font-medium px-5 py-2.5 rounded-[10px] text-white"
+                  style={{ background: "var(--genessa-gradient)", boxShadow: "var(--shadow-sm)" }}>Get detailed report →</Link>
               </div>
             </div>
           </>

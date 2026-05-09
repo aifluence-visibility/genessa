@@ -14,6 +14,7 @@ export function Footer() {
           <Link href="#" className="no-underline font-medium text-[var(--fg-2)]">Terms</Link>
           <Link href="#" className="no-underline font-medium text-[var(--fg-2)]">Status</Link>
           <Link href="#" className="no-underline font-medium text-[var(--fg-2)]">Contact</Link>
+          <Link href="/faq" className="no-underline font-medium text-[var(--fg-2)]">FAQ</Link>
         </div>
       </div>
     </footer>
