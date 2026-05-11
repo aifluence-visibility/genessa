@@ -94,7 +94,7 @@ function ScorePageContent() {
                   {rawUrl} is <span className="gradient-text">{verdict}</span> with AI.
                 </h1>
                 <p className="text-sm md:text-base text-[var(--fg-2)] leading-relaxed mb-5 md:mb-6 max-w-[540px] mx-auto md:mx-0">
-                  Genessa tested {rawUrl} against 5 protocols. {result.checks.filter(c => c.status === "pass").length} checks passed — {result.checks.filter(c => c.status !== "pass").length} need attention.
+                  Genessa tested {rawUrl} against 9 checks. {result.checks.filter(c => c.status === "pass").length} passed — {result.checks.filter(c => c.status !== "pass").length} need attention.
                 </p>
                 <div className="flex gap-2.5 flex-wrap justify-center md:justify-start">
                   <Link href={`/badge?url=${encodeURIComponent(rawUrl)}&score=${score}`} className="no-underline text-sm font-medium px-4 py-2.5 rounded-[10px] text-white whitespace-nowrap"
@@ -137,7 +137,7 @@ function ScorePageContent() {
               <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg)] overflow-hidden shadow-[var(--shadow-sm)]">
                 <div className="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 border-b border-[var(--border)]">
                   <div className="text-base font-semibold tracking-[-0.01em]">Score breakdown</div>
-                  <div className="eyebrow text-[11px]">5 checks · weighted</div>
+                  <div className="eyebrow text-[11px]">9 checks · weighted</div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" style={{ borderCollapse: "collapse", minWidth: 400 }}>

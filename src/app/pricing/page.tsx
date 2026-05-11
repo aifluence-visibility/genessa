@@ -25,7 +25,7 @@ const tiers = [
     desc: "Score your site, see what's missing. Perfect for a one-time check.",
     features: [
       { ok: true, text: "AI visibility score (0–100)" },
-      { ok: true, text: "Full breakdown across 5 protocols" },
+      { ok: true, text: "Full breakdown across 9 checks" },
       { ok: false, text: "Embeddable badge" },
       { ok: false, text: "Listed in Verified Directory" },
       { ok: false, text: "Weekly score tracking" },
@@ -126,7 +126,7 @@ export default function Pricing() {
           <div>
             <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>How is the score calculated?</h4>
             <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>
-              Weighted across Schema.org, llms.txt, entity links, OpenGraph, and robots.txt. See{" "}
+              Weighted across 9 checks: Schema.org, llms.txt, Robots.txt, Open Graph, Entity links, H1/H2, Freshness, Speed, and Answer-first content. See{" "}
               <Link href="/how-it-works" style={{ color: "var(--genessa-blue)" }}>how it works</Link>.
             </p>
           </div>

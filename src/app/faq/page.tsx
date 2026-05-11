@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: "What does Genessa check?",
-    a: "5 protocols: Schema.org structured data, llms.txt, Robots.txt AI permissions, Open Graph tags, and Entity links.",
+    a: "9 checks: Schema.org structured data, llms.txt, Robots.txt AI permissions, Open Graph tags, Entity links, H1/H2 structure, content freshness, page speed, and answer-first content.",
   },
   {
     q: "How do I get the badge?",

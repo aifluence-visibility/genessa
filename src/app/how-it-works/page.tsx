@@ -88,7 +88,7 @@ function VideoPlaceholder() {
 export default function HowItWorks() {
   const steps = [
     { title: "Enter your URL", body: "Drop in a domain. We crawl up to 200 URLs in 30 seconds — no signup needed.", glyph: <GradientGlyph d="M3 12h18M12 3v18" /> },
-    { title: "Get your score", body: "A weighted 0–100 number across 5 protocols. Pass / partial / missing for each check.", glyph: <GradientGlyph d="M12 2a10 10 0 1 0 10 10M12 2v10l7 7" /> },
+    { title: "Get your score", body: "A weighted 0–100 number across 9 checks. Pass / partial / missing for each check.", glyph: <GradientGlyph d="M12 2a10 10 0 1 0 10 10M12 2v10l7 7" /> },
     { title: "Get the badge", body: "Embed a pill that links to your live score. AI bots read it. Visitors mostly don't.", glyph: <GradientGlyph d="M12 2 4 5v6c0 5 3 9 8 11 5-2 8-6 8-11V5l-8-3zM9 12l2 2 4-4" /> },
   ];
 
@@ -96,7 +96,7 @@ export default function HowItWorks() {
     <>
       <Nav />
       <main style={{ paddingBottom: 64 }}>
-        <HeroSimple eyebrow="How it works" title="AI is searching. Can it" accent="see you?" sub="Genessa scores your website against the protocols that AI engines actually read. Two minutes from URL to badge." />
+        <HeroSimple eyebrow="How it works" title="AI is searching. Can it" accent="see you?" sub="Genessa scores your website against 9 checks that AI engines actually use. Two minutes from URL to badge." />
         <section className="px-4 md:px-8" style={{ maxWidth: 1080, margin: "0 auto", paddingTop: 32 }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ChecklistCard kind="old" title="Old world — Google" items={["SSL certificate", "Sitemap.xml", "Robots.txt", "Page speed"]} />

@@ -37,7 +37,7 @@ async function fetchHTML(domain: string): Promise<string> {
 }
 
 function checkSchema(html: string): CheckResult {
-  const weight = 25;
+  const weight = 15;
   const scripts = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
 
   if (scripts.length > 0) {
@@ -69,7 +69,7 @@ function checkSchema(html: string): CheckResult {
       points: Math.round(weight * 0.5),
       weight,
       impact: "Microdata found but JSON-LD is preferred",
-      action: "Add JSON-LD to homepage → +13 points",
+      action: "Add JSON-LD to homepage → +8 points",
     };
   }
 
@@ -79,12 +79,12 @@ function checkSchema(html: string): CheckResult {
     points: 0,
     weight,
     impact: "AI bots struggle to understand content without structured data",
-    action: "Add JSON-LD to homepage → +25 points",
+    action: "Add JSON-LD to homepage → +15 points",
   };
 }
 
 async function checkLlmsTxt(domain: string): Promise<CheckResult> {
-  const weight = 20;
+  const weight = 10;
   try {
     const res = await fetchWithTimeout(`https://${domain}/llms.txt`);
     if (res.ok) {
@@ -108,12 +108,12 @@ async function checkLlmsTxt(domain: string): Promise<CheckResult> {
     points: 0,
     weight,
     impact: "AI bots cannot understand your content",
-    action: "Create llms.txt file → +20 points",
+    action: "Create llms.txt file → +10 points",
   };
 }
 
 async function checkRobotsTxt(domain: string): Promise<CheckResult> {
-  const weight = 20;
+  const weight = 10;
   const bots = ["GPTBot", "ClaudeBot", "PerplexityBot"];
 
   try {
@@ -125,7 +125,7 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
         points: 0,
         weight,
         impact: "robots.txt not found — AI bot access policy unclear",
-        action: "Create robots.txt and allow AI bots → +20 points",
+        action: "Create robots.txt and allow AI bots → +10 points",
       };
     }
 
@@ -174,15 +174,15 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
       points: 0,
       weight,
       impact: "All AI bots are blocked",
-      action: "Add GPTBot: Allow to robots.txt → +20 points",
+      action: "Add GPTBot: Allow to robots.txt → +10 points",
     };
   } catch {
-    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt could not be read", action: "Create robots.txt → +20 points" };
+    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt could not be read", action: "Create robots.txt → +10 points" };
   }
 }
 
 function checkOpenGraph(html: string): CheckResult {
-  const weight = 20;
+  const weight = 10;
   const tags = ["og:title", "og:description", "og:image"];
   let found = 0;
   const missing: string[] = [];
@@ -216,12 +216,12 @@ function checkOpenGraph(html: string): CheckResult {
     points: 0,
     weight,
     impact: "Open Graph tags missing — no preview for AI and social sharing",
-    action: "Add og:title, og:description, og:image → +20 points",
+    action: "Add og:title, og:description, og:image → +10 points",
   };
 }
 
 function checkEntityLinks(html: string): CheckResult {
-  const weight = 15;
+  const weight = 5;
   const wikidata = (html.match(/wikidata\.org/gi) || []).length;
   const wikipedia = (html.match(/wikipedia\.org/gi) || []).length;
   const total = wikidata + wikipedia;
@@ -245,8 +245,101 @@ function checkEntityLinks(html: string): CheckResult {
     points: 0,
     weight,
     impact: "No structured entity links found — AI cannot map to authoritative sources",
-    action: "Add Wikidata or Wikipedia links → +15 points",
+    action: "Add Wikidata or Wikipedia links → +5 points",
   };
+}
+
+function checkH1H2(html: string): CheckResult {
+  const weight = 10;
+  const h1s = (html.match(/<h1[\s>]/gi) || []).length;
+  const h2s = (html.match(/<h2[\s>]/gi) || []).length;
+
+  if (h1s === 1 && h2s >= 2) {
+    return { name: "H1/H2 Structure", status: "pass", points: weight, weight, impact: "Clear heading hierarchy helps AI parse content", action: `${h1s} H1 and ${h2s} H2 tags found` };
+  }
+  if (h1s >= 1 && h2s >= 1) {
+    const pts = Math.round(weight * 0.6);
+    return {
+      name: "H1/H2 Structure",
+      status: "partial",
+      points: pts,
+      weight,
+      impact: h1s > 1 ? "Multiple H1 tags found — use only one" : "Only one H2 found — add more structure",
+      action: `Improve heading structure → +${weight - pts} points`,
+    };
+  }
+  if (h1s >= 1) {
+    return { name: "H1/H2 Structure", status: "partial", points: Math.round(weight * 0.4), weight, impact: "H1 found but no H2 — content lacks structure for AI", action: "Add H2 subheadings → +6 points" };
+  }
+  return { name: "H1/H2 Structure", status: "fail", points: 0, weight, impact: "No H1 tag — AI bots cannot identify page topic", action: "Add H1 and H2 tags → +10 points" };
+}
+
+function checkFreshness(html: string): CheckResult {
+  const weight = 10;
+
+  const hasPublishedTime = /property=["']article:(?:published|modified)_time["']/i.test(html);
+  const timeElements = (html.match(/<time[^>]+datetime=["'][^"']+["']/gi) || []).length;
+  const hasDateModified = /dateModified|datePublished/i.test(html);
+  const recentYear = /\b202[4-6]\b/.test(html);
+
+  const signals = [hasPublishedTime, timeElements > 0, hasDateModified].filter(Boolean).length;
+
+  if (signals >= 2 && recentYear) {
+    return { name: "Freshness", status: "pass", points: weight, weight, impact: "AI bots can verify your content is current", action: "Date signals present" };
+  }
+  if (signals >= 1 || recentYear) {
+    const pts = Math.round(weight * 0.5);
+    return { name: "Freshness", status: "partial", points: pts, weight, impact: "Some date signals found — explicit dates recommended", action: `Add article:published_time meta → +${weight - pts} points` };
+  }
+  return { name: "Freshness", status: "fail", points: 0, weight, impact: "No date signals — AI cannot verify content is current", action: "Add datePublished and dateModified → +10 points" };
+}
+
+async function checkSpeed(domain: string): Promise<CheckResult> {
+  const weight = 15;
+  const start = Date.now();
+  try {
+    const res = await fetchWithTimeout(`https://${domain}`, 8000);
+    const ms = Date.now() - start;
+    if (!res.ok) {
+      return { name: "Page Speed", status: "fail", points: 0, weight, impact: "HTTP error — AI bots cannot access the page", action: "Fix server errors → +15 points" };
+    }
+    if (ms < 2000) {
+      return { name: "Page Speed", status: "pass", points: weight, weight, impact: `Fast load (${ms}ms) — AI bots can crawl quickly`, action: `Page loads in ${ms}ms` };
+    }
+    if (ms < 5000) {
+      const pts = Math.round(weight * 0.5);
+      return { name: "Page Speed", status: "partial", points: pts, weight, impact: `Slow load (${ms}ms) — AI bots may skip your page`, action: `Optimize to under 2s → +${weight - pts} points` };
+    }
+    return { name: "Page Speed", status: "fail", points: 0, weight, impact: `Very slow (${ms}ms) — AI bots likely skip your site`, action: "Improve server response time → +15 points" };
+  } catch {
+    return { name: "Page Speed", status: "fail", points: 0, weight, impact: "Page timed out — AI bots cannot crawl it", action: "Improve server response time → +15 points" };
+  }
+}
+
+function checkAnswerFirst(html: string): CheckResult {
+  const weight = 15;
+
+  const hasFaqSchema = /FAQPage/i.test(html);
+  const hasHowToSchema = /HowTo/i.test(html);
+  const hasDefinitionList = /<dl[\s>]/i.test(html);
+  const hasSummaryOrTldr = /<summary[\s>]/i.test(html) || /\btl;dr\b/i.test(html);
+  const hasAnswerHeading = /<h[12][^>]*>[^<]*(?:what\s+is|how\s+to|why\s+)/i.test(html);
+  const hasBlockquote = /<blockquote/i.test(html);
+
+  const signals = [hasFaqSchema || hasHowToSchema, hasDefinitionList, hasSummaryOrTldr, hasAnswerHeading, hasBlockquote].filter(Boolean).length;
+
+  if ((hasFaqSchema || hasHowToSchema) && signals >= 2) {
+    return { name: "Answer-first", status: "pass", points: weight, weight, impact: "AI bots can extract direct answers from your content", action: "FAQ/HowTo schema and answer patterns found" };
+  }
+  if (signals >= 2) {
+    const pts = Math.round(weight * 0.6);
+    return { name: "Answer-first", status: "partial", points: pts, weight, impact: "Some answer-first signals found", action: `Add FAQPage schema → +${weight - pts} points` };
+  }
+  if (signals >= 1) {
+    const pts = Math.round(weight * 0.3);
+    return { name: "Answer-first", status: "partial", points: pts, weight, impact: "Minimal answer-first content detected", action: `Add FAQ schema and lead answers → +${weight - pts} points` };
+  }
+  return { name: "Answer-first", status: "fail", points: 0, weight, impact: "No answer-first content — AI cannot extract quick answers", action: "Add FAQPage schema and lead paragraphs → +15 points" };
 }
 
 export async function GET(request: NextRequest) {
@@ -257,17 +350,21 @@ export async function GET(request: NextRequest) {
 
   const domain = url.replace(/^https?:\/\//, "").replace(/\/.*$/, "").trim();
 
-  const [html, llmsResult, robotsResult] = await Promise.all([
+  const [html, llmsResult, robotsResult, speedResult] = await Promise.all([
     fetchHTML(domain),
     checkLlmsTxt(domain),
     checkRobotsTxt(domain),
+    checkSpeed(domain),
   ]);
 
   const schemaResult = checkSchema(html);
   const ogResult = checkOpenGraph(html);
   const entityResult = checkEntityLinks(html);
+  const h1h2Result = checkH1H2(html);
+  const freshnessResult = checkFreshness(html);
+  const answerFirstResult = checkAnswerFirst(html);
 
-  const checks: CheckResult[] = [schemaResult, llmsResult, robotsResult, ogResult, entityResult];
+  const checks: CheckResult[] = [schemaResult, llmsResult, robotsResult, ogResult, entityResult, h1h2Result, freshnessResult, speedResult, answerFirstResult];
   const score = checks.reduce((sum, c) => sum + c.points, 0);
 
   return Response.json({
