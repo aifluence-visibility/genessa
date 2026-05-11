@@ -6,11 +6,18 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
 
+function tierVerb(tier: string): string {
+  if (tier === "featured") return "AI Trusted";
+  if (tier === "verified") return "AI Verified";
+  return "AI Scored";
+}
+
 function EmbedBadge({ url, score, dark = false, tier }: { url: string; score: number; dark?: boolean; tier: string }) {
   const isVerified = tier !== "scored";
   const grad = isVerified ? ["#4B7BFF", "#A77BFF"] : ["#9A9AA6", "#6B6B75"];
-  const gid = `bg-${tier}-${dark}`;
-  const verb = isVerified ? "AI verified" : "AI scored";
+  const gid = `bg-${tier}-${dark ? "d" : "l"}`;
+  const verb = tierVerb(tier);
+  void score;
   return (
     <span className="inline-flex items-center gap-2 flex-wrap justify-center">
       <span className="inline-flex items-center gap-2 md:gap-2.5 px-3 md:px-4 py-2 md:py-2.5 rounded-full text-[12px] md:text-sm font-medium whitespace-nowrap" style={{
@@ -24,11 +31,7 @@ function EmbedBadge({ url, score, dark = false, tier }: { url: string; score: nu
           <g fill={`url(#${gid})`}><circle cx="3" cy="3" r="1.2" /><circle cx="13" cy="3" r="1.2" /><circle cx="3" cy="13" r="1.2" /><circle cx="13" cy="13" r="1.2" /></g>
           <circle cx="8" cy="8" r="2.4" fill={`url(#${gid})`} />
         </svg>
-        {verb} <span style={{ opacity: 0.4 }}>·</span> Genessa <span style={{ opacity: 0.4 }}>·</span>
-        <span style={isVerified
-          ? { fontFamily: "var(--font-geist-mono)", fontWeight: 600, background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }
-          : { fontFamily: "var(--font-geist-mono)", fontWeight: 600, color: dark ? "#A8A8B3" : "#71717D" }
-        }>{score}/100</span>
+        {verb} <span style={{ opacity: 0.4 }}>·</span> Genessa
       </span>
       {tier === "featured" && (
         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] md:text-xs font-semibold uppercase tracking-wide text-white" style={{ background: "var(--genessa-gradient)" }}>Featured</span>
@@ -42,9 +45,8 @@ function BadgePageContent() {
   const url = (searchParams.get("url") || "acme.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
   const score = parseInt(searchParams.get("score") || "82", 10);
   const tier = score >= 90 ? "featured" : score >= 80 ? "verified" : "scored";
-  const tierLabel = tier === "featured" ? "Featured" : tier === "verified" ? "Verified" : "Scored";
-
-  const embedCode = `<a href="https://genessa.io/score?url=${url}" target="_blank">\n  <img src="https://genessa.io/api/badge/${url}" alt="AI verified · ${score}/100" />\n</a>`;
+  const tierLabel = tier === "featured" ? "AI Trusted" : tier === "verified" ? "AI Verified" : "AI Scored";
+  const embedCode = `<a href="https://genessa.io/score?url=${url}" target="_blank">\n  <img src="https://genessa.io/api/badge/${url}" alt="${tierLabel} · Genessa" />\n</a>`;
   const [copied, setCopied] = useState(false);
 
   return (

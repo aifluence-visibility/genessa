@@ -19,7 +19,7 @@ function makeBadgeSVG(domain: string, score: number): string {
     color = "#9A9AA6";
   }
 
-  const text = `${label} · Genessa · ${score}/100`;
+  const text = `${label} · Genessa`;
   const textWidth = text.length * 6.2 + 20;
   const totalWidth = Math.round(textWidth + (score >= 90 ? 20 : 0));
   const height = 24;
@@ -27,7 +27,7 @@ function makeBadgeSVG(domain: string, score: number): string {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${height}" viewBox="0 0 ${totalWidth} ${height}">
   <rect rx="${r}" ry="${r}" width="${totalWidth}" height="${height}" fill="${color}"/>
-  <text x="${score >= 90 ? 24 : 10}" y="16.5" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="500">${text}</text>
+  <text x="${score >= 90 ? 24 : 10}" y="16" fill="#fff" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="500">${text}</text>
   ${starIcon}
 </svg>`;
 }
