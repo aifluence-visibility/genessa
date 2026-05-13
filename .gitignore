@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated SQL bundle (local convenience)
+supabase/_bundle_stage1.sql

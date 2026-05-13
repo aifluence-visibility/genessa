@@ -1,0 +1,18 @@
+# Production-ish image: agent worker only (no Next.js app).
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY scripts ./scripts
+
+ENV NODE_ENV=production
+# Override in your orchestrator as needed.
+ENV INTERNAL_WORKER_POLL_MS=5000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD node scripts/agent-worker-health.mjs || exit 1
+
+CMD ["node", "scripts/agent-worker-demo.mjs"]

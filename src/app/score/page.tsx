@@ -26,15 +26,29 @@ interface AuditResult {
 function ScorePageContent() {
   const searchParams = useSearchParams();
   const rawUrl = (searchParams.get("url") || "acme.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return <ScoreAuditView key={rawUrl} rawUrl={rawUrl} />;
+}
+
+function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
   const [result, setResult] = useState<AuditResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     fetch(`/api/audit?url=${encodeURIComponent(rawUrl)}`)
       .then((r) => r.json())
-      .then((data) => { setResult(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) {
+          setResult(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [rawUrl]);
 
   const score = result?.score ?? 0;

@@ -12,7 +12,7 @@ function tierVerb(tier: string): string {
   return "AI Scored";
 }
 
-function EmbedBadge({ url, score, dark = false, tier }: { url: string; score: number; dark?: boolean; tier: string }) {
+function EmbedBadge({ score, dark = false, tier }: { score: number; dark?: boolean; tier: string }) {
   const isVerified = tier !== "scored";
   const grad = isVerified ? ["#4B7BFF", "#A77BFF"] : ["#9A9AA6", "#6B6B75"];
   const gid = `bg-${tier}-${dark ? "d" : "l"}`;
@@ -94,10 +94,10 @@ function BadgePageContent() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 md:mb-7">
           <div className="flex items-center justify-center p-6 md:p-7 rounded-[14px] bg-white border border-[var(--border)] min-h-[70px] overflow-x-auto">
-            <EmbedBadge url={url} score={score} tier={tier} />
+            <EmbedBadge score={score} tier={tier} />
           </div>
           <div className="flex items-center justify-center p-6 md:p-7 rounded-[14px] min-h-[70px] overflow-x-auto" style={{ background: "#0B0B11" }}>
-            <EmbedBadge url={url} score={score} tier={tier} dark />
+            <EmbedBadge score={score} tier={tier} dark />
           </div>
         </div>
 

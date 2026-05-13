@@ -37,7 +37,7 @@ export default function ContactPage() {
               Get in <em className="serif-italic gradient-text" style={{ paddingRight: 4 }}>touch</em>
             </h1>
             <p className="text-sm md:text-[17px]" style={{ color: "var(--fg-2)", maxWidth: 480, margin: "0 auto" }}>
-              Have a question or need help? Drop us a message and we'll get back to you shortly.
+              Have a question or need help? Drop us a message and we&apos;ll get back to you shortly.
             </p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function ContactPage() {
             {status === "sent" && (
               <div className="flex items-center gap-2 px-4 py-3 rounded-[10px] bg-[var(--score-good-bg)] text-[var(--score-good)] text-sm font-medium">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
-                Message sent — we'll be in touch soon.
+                Message sent — we&apos;ll be in touch soon.
               </div>
             )}
             {status === "error" && (
