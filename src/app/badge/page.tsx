@@ -85,7 +85,7 @@ function BadgePageContent() {
                 <span className="text-[11px] text-[var(--fg-3)] px-2 py-0.5 rounded-full bg-[var(--bg-muted)]" style={{ fontFamily: "var(--font-geist-mono)" }}>{item.range}</span>
               </div>
               <div className="flex items-center justify-center p-5 md:p-7 rounded-[14px] bg-[var(--bg-subtle)] min-h-[70px] md:min-h-[90px] overflow-x-auto">
-                <EmbedBadge url={url} score={item.s} tier={item.t} />
+                <EmbedBadge score={item.s} tier={item.t} />
               </div>
               <div className="text-[13px] text-[var(--fg-2)] leading-relaxed">{item.desc}</div>
             </div>
