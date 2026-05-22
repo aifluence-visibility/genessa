@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { createClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function InputField({
   label,
@@ -61,14 +61,19 @@ export default function Signup() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({ email, password });
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error: authError } = await supabase.auth.signUp({ email, password });
 
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(authError.message);
+      } else {
+        setDone(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    } else {
-      setDone(true);
     }
   }
 
