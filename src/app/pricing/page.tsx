@@ -4,7 +4,7 @@ import Link from "next/link";
 
 function Check({ grad }: { grad?: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={grad ? "url(#pcg)" : "var(--fg-3)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" style={{ marginTop: 2 }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={grad ? "url(#pcg)" : "currentColor"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
       <defs><linearGradient id="pcg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#2952E3" /><stop offset="1" stopColor="#7B3FE4" /></linearGradient></defs>
       <polyline points="20 6 9 17 4 12" />
     </svg>
@@ -13,115 +13,272 @@ function Check({ grad }: { grad?: boolean }) {
 
 function Dash() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="2.5" strokeLinecap="round" className="shrink-0" style={{ marginTop: 2 }}>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
       <line x1="6" y1="12" x2="18" y2="12" />
     </svg>
   );
 }
 
-const tiers = [
+function Lock() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+const plans = [
   {
-    name: "Free", price: "$0", per: "forever",
-    desc: "Score your site, see what's missing. Perfect for a one-time check.",
+    name: "Free",
+    price: "$0",
+    per: "forever",
+    popular: false,
+    audience: "For anyone who wants a quick AI health check.",
     features: [
-      { ok: true, text: "AI visibility score (0–100)" },
-      { ok: true, text: "Full breakdown across 9 checks" },
-      { ok: false, text: "Embeddable badge" },
-      { ok: false, text: "Listed in Verified Directory" },
-      { ok: false, text: "Weekly score tracking" },
+      { icon: "check", text: "1 domain" },
+      { icon: "check", text: "1 scan every 7 days" },
+      { icon: "check", text: "AI Readiness Score (full)" },
+      { icon: "partial", text: "AI Authority Score (number only)" },
+      { icon: "lock", text: "AI Influence Score (locked)" },
+      { icon: "check", text: "2 insight blocks" },
+      { icon: "dash", text: "Scan history" },
+      { icon: "dash", text: "Action checklist" },
     ],
-    cta: { label: "Get free score", kind: "secondary" as const },
+    cta: { label: "Start free", href: "/?scan=1" },
+    ctaKind: "secondary" as const,
   },
   {
-    name: "Verified", price: "$29", per: "/ month", popular: true,
-    desc: "The whole stack: badge, directory listing, weekly score tracking, alerts.",
+    name: "Starter",
+    price: "$29",
+    per: "/ month",
+    popular: true,
+    audience: "For founders & marketers serious about AI visibility.",
     features: [
-      { ok: true, text: "Everything in Free" },
-      { ok: true, text: "Embeddable Verified badge" },
-      { ok: true, text: "Auto-listing in Verified Directory" },
-      { ok: true, text: "Weekly score tracking + email alerts" },
-      { ok: true, text: "Competitor benchmarking (3 sites)" },
+      { icon: "check", text: "1 domain" },
+      { icon: "check", text: "Unlimited scans" },
+      { icon: "check", text: "All three AI scores" },
+      { icon: "check", text: "6 insight blocks" },
+      { icon: "check", text: "Action checklist" },
+      { icon: "check", text: "Scan history" },
+      { icon: "dash", text: "AI mention tracking" },
+      { icon: "dash", text: "PDF export" },
     ],
-    cta: { label: "Start 14-day trial", kind: "primary" as const },
+    cta: { label: "Get started", href: "/contact" },
+    ctaKind: "primary" as const,
   },
   {
-    name: "Consulting", price: "Custom", per: "",
-    desc: "We audit, recommend, and implement. End-to-end fix for AI visibility.",
+    name: "Pro",
+    price: "$79",
+    per: "/ month",
+    popular: false,
+    audience: "For agencies and teams managing multiple brands.",
     features: [
-      { ok: true, text: "Everything in Verified" },
-      { ok: true, text: "Full audit (multi-site, sub-pages)" },
-      { ok: true, text: "Implementation by our team" },
-      { ok: true, text: "Schema.org & llms.txt build-out" },
-      { ok: true, text: "Quarterly review + roadmap" },
+      { icon: "check", text: "5 domains" },
+      { icon: "check", text: "Everything in Starter" },
+      { icon: "check", text: "AI mention tracking" },
+      { icon: "check", text: "PDF report export" },
+      { icon: "dash", text: "Competitor analysis (coming soon)" },
     ],
-    cta: { label: "Get a quote", kind: "secondary" as const },
+    cta: { label: "Get started", href: "/contact" },
+    ctaKind: "secondary" as const,
   },
 ];
+
+function FeatureIcon({ icon, grad }: { icon: string; grad?: boolean }) {
+  if (icon === "check") return <Check grad={grad} />;
+  if (icon === "dash") return <Dash />;
+  if (icon === "lock") return <Lock />;
+  if (icon === "partial") return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+  return null;
+}
+
+type CellValue = string | { text: string; muted?: boolean };
+
+const tableRows: { label: string; free: CellValue; starter: CellValue; pro: CellValue }[] = [
+  { label: "AI Readiness Score", free: "Full (9 checks)", starter: "Full (9 checks)", pro: "Full (9 checks)" },
+  { label: "AI Authority Score", free: { text: "Number only", muted: true }, starter: "Full detail", pro: "Full detail" },
+  { label: "AI Influence Score", free: { text: "Locked", muted: true }, starter: "Full detail", pro: "Full detail" },
+  { label: "Insight blocks", free: "2 / 6", starter: "6 / 6", pro: "6 / 6" },
+  { label: "Scan limit", free: "1 per 7 days", starter: "Unlimited", pro: "Unlimited" },
+  { label: "Domains", free: "1", starter: "1", pro: "5" },
+  { label: "Scan history", free: "—", starter: "✓", pro: "✓" },
+  { label: "Action checklist", free: "—", starter: "✓", pro: "✓" },
+  { label: "AI mention tracking", free: "—", starter: "—", pro: "✓" },
+  { label: "PDF export", free: "—", starter: "—", pro: "✓" },
+  { label: "Competitor analysis", free: "—", starter: "—", pro: { text: "Coming soon", muted: true } },
+];
+
+function TableCell({ value, highlight }: { value: CellValue; highlight?: boolean }) {
+  if (value === "—") {
+    return <td className="px-5 py-4 text-center" style={{ color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)", fontSize: 13 }}>—</td>;
+  }
+  if (value === "✓") {
+    return (
+      <td className="px-5 py-4 text-center">
+        <span className="inline-flex justify-center">
+          <Check grad={highlight} />
+        </span>
+      </td>
+    );
+  }
+  if (typeof value === "object") {
+    return (
+      <td className="px-5 py-4 text-center text-[13px]" style={{ color: value.muted ? "var(--fg-3)" : "var(--fg)", fontFamily: "var(--font-geist-mono)" }}>
+        {value.text}
+      </td>
+    );
+  }
+  return (
+    <td className="px-5 py-4 text-center text-[13px]" style={{ color: highlight ? "var(--fg)" : "var(--fg-2)", fontFamily: "var(--font-geist-mono)", fontWeight: highlight ? 500 : 400 }}>
+      {value}
+    </td>
+  );
+}
 
 export default function Pricing() {
   return (
     <>
       <Nav />
       <main className="w-full max-w-[1100px] mx-auto px-4 md:px-8 overflow-hidden" style={{ paddingTop: 48, paddingBottom: 80 }}>
+
+        {/* Hero */}
         <div className="relative text-center" style={{ marginBottom: 56 }}>
           <div className="absolute pointer-events-none" style={{ inset: -20, background: "radial-gradient(50% 60% at 50% 30%, rgba(75,123,255,0.14) 0%, rgba(123,63,228,0) 70%)" }} />
           <div className="relative">
             <div className="eyebrow" style={{ marginBottom: 16 }}>Pricing</div>
             <h1 className="text-3xl md:text-[56px]" style={{ fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1.05, margin: "0 0 14px" }}>
-              Score, then <em className="serif-italic gradient-text" style={{ paddingRight: 4 }}>signal</em>
+              Simple, transparent <em className="serif-italic gradient-text" style={{ paddingRight: 4 }}>pricing</em>
             </h1>
-            <p className="text-sm md:text-[17px]" style={{ color: "var(--fg-2)", maxWidth: 540, margin: "0 auto" }}>Free to score. Pay to verify. We&apos;ll do the work for you if you&apos;d rather not.</p>
+            <p className="text-sm md:text-[17px]" style={{ color: "var(--fg-2)", maxWidth: 520, margin: "0 auto" }}>
+              Start free. Upgrade when you need more depth, more domains, or AI mention tracking.
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px] items-stretch">
-          {tiers.map((t) => (
-            <div key={t.name} className={`relative flex flex-col gap-[18px] p-6 md:p-8 ${t.popular ? "md:-translate-y-2" : ""}`} style={{
-              background: "var(--bg)",
-              border: t.popular ? "1.5px solid transparent" : "1px solid var(--border)",
-              borderRadius: 18,
-              ...(t.popular ? {
-                background: "linear-gradient(var(--bg),var(--bg)) padding-box, var(--genessa-gradient) border-box",
-                boxShadow: "var(--shadow-glow)",
-              } : {}),
-            }}>
-              {t.popular && <span className="absolute" style={{ top: -12, left: "50%", transform: "translateX(-50%)", padding: "5px 14px", borderRadius: 99, background: "var(--genessa-gradient)", color: "#fff", fontFamily: "var(--font-geist-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Most popular</span>}
-              <div style={{ fontSize: 14, fontFamily: "var(--font-geist-mono)", color: "var(--fg-3)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{t.name}</div>
-              <div className="flex items-baseline gap-1.5">
-                <span className={`text-4xl md:text-[56px] ${t.popular ? "gradient-text" : ""}`} style={{ fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1 }}>{t.price}</span>
-                {t.per && <span style={{ fontSize: 15, color: "var(--fg-3)" }}>{t.per}</span>}
+        {/* SECTION 1 — Plan cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch" style={{ marginBottom: 80 }}>
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative flex flex-col gap-5 p-6 md:p-8 ${plan.popular ? "md:-translate-y-2" : ""}`}
+              style={{
+                borderRadius: 18,
+                background: plan.popular
+                  ? "linear-gradient(var(--bg),var(--bg)) padding-box, var(--genessa-gradient) border-box"
+                  : "var(--bg)",
+                border: plan.popular ? "1.5px solid transparent" : "1px solid var(--border)",
+                boxShadow: plan.popular ? "var(--shadow-glow)" : "var(--shadow-sm)",
+              }}
+            >
+              {plan.popular && (
+                <span className="absolute" style={{
+                  top: -13, left: "50%", transform: "translateX(-50%)",
+                  padding: "5px 14px", borderRadius: 99,
+                  background: "var(--genessa-gradient)", color: "#fff",
+                  fontFamily: "var(--font-geist-mono)", fontSize: 11, fontWeight: 600,
+                  letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap",
+                }}>Most popular</span>
+              )}
+
+              <div style={{ fontFamily: "var(--font-geist-mono)", fontSize: 12, color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                {plan.name}
               </div>
-              <div style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55, minHeight: 42 }}>{t.desc}</div>
-              <ul className="flex flex-col gap-3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {t.features.map((f) => (
-                  <li key={f.text} className={`flex items-start gap-2.5 text-sm ${f.ok ? "" : "text-[var(--fg-3)]"}`}>
-                    {f.ok ? <Check grad={t.popular} /> : <Dash />}
+
+              <div className="flex items-baseline gap-1.5">
+                <span className={`text-[48px] leading-none font-medium tracking-[-0.04em] ${plan.popular ? "gradient-text" : ""}`}>
+                  {plan.price}
+                </span>
+                {plan.per && <span style={{ fontSize: 15, color: "var(--fg-3)" }}>{plan.per}</span>}
+              </div>
+
+              <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.5, fontStyle: "italic" }}>
+                {plan.audience}
+              </p>
+
+              <ul className="flex flex-col gap-3 flex-1" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {plan.features.map((f) => (
+                  <li key={f.text} className="flex items-center gap-2.5 text-[13.5px]" style={{
+                    color: f.icon === "dash" || f.icon === "lock" ? "var(--fg-3)" : "var(--fg)",
+                  }}>
+                    <FeatureIcon icon={f.icon} grad={plan.popular} />
                     <span>{f.text}</span>
                   </li>
                 ))}
               </ul>
-              <Link href="/" className="block text-center no-underline" style={{
-                padding: "13px 20px", borderRadius: 10, fontFamily: "var(--font-geist-sans)", fontSize: 14, fontWeight: 500, cursor: "pointer",
-                ...(t.cta.kind === "primary"
-                  ? { background: "var(--genessa-gradient)", color: "#fff", boxShadow: "var(--shadow-glow)", border: "none" }
-                  : { background: "var(--bg)", color: "var(--fg)", border: "1px solid var(--border)" }),
-              }}>{t.cta.label}</Link>
+
+              <Link
+                href={plan.cta.href}
+                className="block text-center no-underline mt-2"
+                style={{
+                  padding: "13px 20px", borderRadius: 10,
+                  fontFamily: "var(--font-geist-sans)", fontSize: 14, fontWeight: 500,
+                  ...(plan.ctaKind === "primary"
+                    ? { background: "var(--genessa-gradient)", color: "#fff", boxShadow: "var(--shadow-glow)" }
+                    : { background: "var(--bg)", color: "var(--fg)", border: "1px solid var(--border-strong)" }),
+                }}
+              >
+                {plan.cta.label}
+              </Link>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mt-16">
+        {/* SECTION 2 — Comparison table */}
+        <div style={{ marginBottom: 80 }}>
+          <h2 className="text-xl md:text-2xl font-semibold tracking-[-0.02em] mb-2">Compare plans</h2>
+          <p style={{ fontSize: 14, color: "var(--fg-2)", marginBottom: 24 }}>Every feature, side by side.</p>
+
+          <div className="overflow-x-auto rounded-[16px] border border-[var(--border)]" style={{ boxShadow: "var(--shadow-sm)" }}>
+            <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 560 }}>
+              <thead>
+                <tr style={{ background: "var(--bg-subtle)", borderBottom: "1px solid var(--border)" }}>
+                  <th className="px-5 py-4 text-left" style={{ fontSize: 12, fontFamily: "var(--font-geist-mono)", color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500, width: "36%" }}>
+                    Feature
+                  </th>
+                  {plans.map((p) => (
+                    <th key={p.name} className="px-5 py-4 text-center" style={{ fontSize: 12, fontFamily: "var(--font-geist-mono)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, color: p.popular ? "var(--genessa-blue)" : "var(--fg-3)", width: "21.3%" }}>
+                      {p.name}
+                      {p.popular && (
+                        <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded text-white text-[10px] font-semibold tracking-wide" style={{ background: "var(--genessa-gradient)", verticalAlign: "middle" }}>★</span>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row, i) => (
+                  <tr key={row.label} style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined, background: i % 2 === 0 ? "var(--bg)" : "var(--bg-subtle)" }}>
+                    <td className="px-5 py-4 text-[13.5px] font-medium" style={{ color: "var(--fg)" }}>{row.label}</td>
+                    <TableCell value={row.free} />
+                    <TableCell value={row.starter} highlight />
+                    <TableCell value={row.pro} />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
           <div>
             <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Do I need a credit card for Free?</h4>
-            <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>No. Free runs forever, no signup needed.</p>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>No. Free is free forever — no card, no signup required.</p>
           </div>
           <div>
-            <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>What counts as one &ldquo;site&rdquo;?</h4>
+            <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>What counts as one &ldquo;domain&rdquo;?</h4>
             <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>One root domain, including subdomains and up to 200 indexed URLs.</p>
           </div>
           <div>
-            <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Can I downgrade anytime?</h4>
-            <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>Yes. Cancel from billing settings; you keep access until the period ends.</p>
+            <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>Can I cancel anytime?</h4>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.55 }}>Yes. Cancel from billing settings and keep access until the period ends.</p>
           </div>
           <div>
             <h4 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>How is the score calculated?</h4>
@@ -131,6 +288,7 @@ export default function Pricing() {
             </p>
           </div>
         </div>
+
       </main>
       <Footer />
     </>
