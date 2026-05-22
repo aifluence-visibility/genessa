@@ -16,13 +16,13 @@ export async function POST(request: NextRequest) {
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !serviceKey) {
+  if (!supabaseUrl || !anonKey) {
     return Response.json({ ok: true });
   }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
+  const supabase = createClient(supabaseUrl, anonKey);
 
   await supabase.from("leads").insert({
     email,
