@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
-import { createClient } from "@/lib/supabase";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function InputField({
   label,
@@ -62,7 +62,7 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
+    const supabase = createSupabaseBrowserClient();
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
