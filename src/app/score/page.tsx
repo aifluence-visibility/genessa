@@ -23,6 +23,13 @@ interface AuditResult {
   checks: CheckResult[];
 }
 
+interface InsightResult {
+  hero_text: string | null;
+  strongest_point: string | null;
+  critical_gap: string | null;
+  quick_win: string | null;
+}
+
 function ScorePageContent() {
   const searchParams = useSearchParams();
   const rawUrl = (searchParams.get("url") || "acme.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -32,9 +39,12 @@ function ScorePageContent() {
 function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
   const [result, setResult] = useState<AuditResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [insight, setInsight] = useState<InsightResult | null>(null);
+  const [insightLoading, setInsightLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+
     fetch(`/api/audit?url=${encodeURIComponent(rawUrl)}`)
       .then((r) => r.json())
       .then((data) => {
@@ -46,6 +56,19 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
       .catch(() => {
         if (!cancelled) setLoading(false);
       });
+
+    fetch(`/api/insight?url=${encodeURIComponent(rawUrl)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) {
+          setInsight(data);
+          setInsightLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setInsightLoading(false);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -59,7 +82,6 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
     .map((c) => ({ title: c.action, body: c.impact, gain: c.weight - c.points }))
     .filter((f) => f.gain > 0);
   const totalGain = fixes.reduce((s, f) => s + f.gain, 0);
-
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--fg)]">
@@ -119,6 +141,41 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
               </div>
             </div>
 
+            {/* 3 Score Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-5 md:mb-6">
+              {/* AI Readiness */}
+              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg)] p-4 md:p-5 shadow-[var(--shadow-sm)]">
+                <div className="eyebrow mb-3">AI Readiness</div>
+                <div className="flex items-end gap-1.5">
+                  <span className="text-[40px] font-semibold tracking-[-0.04em] gradient-text leading-none">{score}</span>
+                  <span className="text-base text-[var(--fg-3)] mb-1">/100</span>
+                </div>
+                <div className="text-[13px] text-[var(--fg-2)] mt-2">Technical AI readiness</div>
+              </div>
+
+              {/* AI Authority — coming soon */}
+              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4 md:p-5">
+                <div className="eyebrow mb-3" style={{ opacity: 0.5 }}>AI Authority</div>
+                <div className="mb-1.5">
+                  <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[var(--bg-muted)] text-[var(--fg-3)]" style={{ fontFamily: "var(--font-geist-mono)" }}>Coming soon</span>
+                </div>
+                <div className="text-[13px] text-[var(--fg-3)] mt-2">Semantic authority signals</div>
+              </div>
+
+              {/* AI Influence — premium locked */}
+              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4 md:p-5">
+                <div className="eyebrow mb-3" style={{ opacity: 0.5 }}>AI Influence</div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-3)]">Premium</span>
+                </div>
+                <div className="text-[13px] text-[var(--fg-3)] mt-2">AI mention tracking</div>
+              </div>
+            </div>
+
             {/* Fix Now Alert */}
             {fixes.length > 0 && (
               <div className="flex flex-col gap-3 p-4 md:p-5 rounded-[14px] border border-[#FCA5A5]"
@@ -146,8 +203,9 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
               </div>
             )}
 
-            {/* Breakdown Table + Network Vis */}
+            {/* Breakdown Table + Insight Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5 mt-5">
+              {/* Score breakdown */}
               <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg)] overflow-hidden shadow-[var(--shadow-sm)]">
                 <div className="flex items-center justify-between px-4 md:px-5 py-3.5 md:py-4 border-b border-[var(--border)]">
                   <div className="text-base font-semibold tracking-[-0.01em]">Score breakdown</div>
@@ -180,13 +238,62 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
                 </div>
               </div>
 
-              {/* Detailed Report CTA */}
-              <div className="flex flex-col items-center justify-center text-center rounded-[14px] border border-[var(--border)] bg-[var(--bg)] p-8 md:p-10 shadow-[var(--shadow-sm)]">
-                <div className="text-lg md:text-xl font-semibold tracking-[-0.02em] mb-2">Want to see where AI mentions you?</div>
-                <p className="text-sm text-[var(--fg-2)] leading-relaxed max-w-[400px] mb-5">Our detailed report tracks your brand across ChatGPT, Perplexity, Claude and Google AI Overviews.</p>
-                <Link href="/pricing" className="no-underline text-sm font-medium px-5 py-2.5 rounded-[10px] text-white"
-                  style={{ background: "var(--genessa-gradient)", boxShadow: "var(--shadow-sm)" }}>Get detailed report →</Link>
-              </div>
+              {/* Insight Panel */}
+              {insightLoading ? (
+                <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg)] shadow-[var(--shadow-sm)] overflow-hidden">
+                  <div className="px-4 md:px-5 py-3.5 md:py-4 border-b border-[var(--border)]">
+                    <div className="h-3 w-20 rounded bg-[var(--bg-muted)] animate-pulse" />
+                  </div>
+                  <div className="p-4 md:p-5 flex flex-col gap-3.5">
+                    <div className="h-5 w-full rounded-md bg-[var(--bg-muted)] animate-pulse" />
+                    <div className="h-5 w-4/5 rounded-md bg-[var(--bg-muted)] animate-pulse mb-2" />
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="p-3.5 rounded-[10px] border border-[var(--border)] flex flex-col gap-2">
+                        <div className="h-2.5 w-24 rounded bg-[var(--bg-muted)] animate-pulse" />
+                        <div className="h-4 w-full rounded bg-[var(--bg-muted)] animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : insight ? (
+                <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg)] overflow-hidden shadow-[var(--shadow-sm)]">
+                  <div className="px-4 md:px-5 py-3.5 md:py-4 border-b border-[var(--border)]">
+                    <div className="eyebrow text-[11px]">AI Insight</div>
+                  </div>
+                  <div className="p-4 md:p-5 flex flex-col gap-3">
+                    {insight.hero_text && (
+                      <p className="text-[15px] font-medium leading-relaxed text-[var(--fg)] tracking-[-0.01em] pb-1">
+                        {insight.hero_text}
+                      </p>
+                    )}
+                    {insight.strongest_point && (
+                      <div className="flex flex-col gap-1.5 p-3.5 rounded-[10px] border border-[#86EFAC]" style={{ background: "rgba(34,197,94,0.04)" }}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-[#16A34A]">Strongest point</div>
+                        <div className="text-[13px] text-[var(--fg)] leading-relaxed">{insight.strongest_point}</div>
+                      </div>
+                    )}
+                    {insight.critical_gap && (
+                      <div className="flex flex-col gap-1.5 p-3.5 rounded-[10px] border border-[#FCA5A5]" style={{ background: "rgba(239,68,68,0.04)" }}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-[#DC2626]">Critical gap</div>
+                        <div className="text-[13px] text-[var(--fg)] leading-relaxed">{insight.critical_gap}</div>
+                      </div>
+                    )}
+                    {insight.quick_win && (
+                      <div className="flex flex-col gap-1.5 p-3.5 rounded-[10px] border border-[#93C5FD]" style={{ background: "rgba(59,130,246,0.04)" }}>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-[#2563EB]">Quick win</div>
+                        <div className="text-[13px] text-[var(--fg)] leading-relaxed">{insight.quick_win}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center rounded-[14px] border border-[var(--border)] bg-[var(--bg)] p-8 md:p-10 shadow-[var(--shadow-sm)]">
+                  <div className="text-lg md:text-xl font-semibold tracking-[-0.02em] mb-2">Want to see where AI mentions you?</div>
+                  <p className="text-sm text-[var(--fg-2)] leading-relaxed max-w-[400px] mb-5">Our detailed report tracks your brand across ChatGPT, Perplexity, Claude and Google AI Overviews.</p>
+                  <Link href="/pricing" className="no-underline text-sm font-medium px-5 py-2.5 rounded-[10px] text-white"
+                    style={{ background: "var(--genessa-gradient)", boxShadow: "var(--shadow-sm)" }}>Get detailed report →</Link>
+                </div>
+              )}
             </div>
           </>
         ) : (
