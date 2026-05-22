@@ -1,7 +1,5 @@
 import { NextRequest } from "next/server";
 
-export const runtime = "edge";
-
 interface CheckResult {
   name: string;
   status: "pass" | "partial" | "fail";
@@ -112,18 +110,18 @@ export async function GET(request: NextRequest) {
 
     const prompt = `Analyze this website for AI visibility.\nDomain: ${domain}\nTitle: ${title}\nTechnical scan: ${technicalScan}\n\nReturn JSON only, no markdown:\n{\n  hero_text: string (max 20 words, specific to this site),\n  strongest_point: string (1 sentence),\n  critical_gap: string (1 sentence),\n  quick_win: string (1 sentence)\n}`;
 
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/chat/completions", {
+    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-6",
         max_tokens: 300,
-        temperature: 0,
+        system: "You are an AI visibility analyst. Be specific, concise, no generic advice.",
         messages: [
-          { role: "system", content: "You are an AI visibility analyst. Be specific, concise, no generic advice." },
           { role: "user", content: prompt },
         ],
       }),
@@ -135,14 +133,8 @@ export async function GET(request: NextRequest) {
 
     const anthropicJson = await anthropicRes.json();
     const text =
-      typeof anthropicJson?.completion === "string"
-        ? anthropicJson.completion
-        : typeof anthropicJson?.output_text === "string"
-        ? anthropicJson.output_text
-        : typeof anthropicJson?.message?.content?.[0]?.text === "string"
-        ? anthropicJson.message.content[0].text
-        : typeof anthropicJson?.completion?.[0]?.content?.[0]?.text === "string"
-        ? anthropicJson.completion[0].content[0].text
+      typeof anthropicJson?.content?.[0]?.text === "string"
+        ? anthropicJson.content[0].text
         : "";
 
     const parsed = safeParseJSON(text);
