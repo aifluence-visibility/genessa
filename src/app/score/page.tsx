@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
@@ -41,6 +41,10 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
   const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState<InsightResult | null>(null);
   const [insightLoading, setInsightLoading] = useState(true);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +77,20 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
       cancelled = true;
     };
   }, [rawUrl]);
+
+  async function handleEmailSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setEmailSubmitting(true);
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput, domain: rawUrl, score: result?.score ?? 0 }),
+      });
+    } catch { /* silent fail */ }
+    setEmailSubmitting(false);
+    setEmailSubmitted(true);
+  }
 
   const score = result?.score ?? 0;
   const verdict = score >= 90 ? "excellent" : score >= 80 ? "good" : score >= 60 ? "mid" : "poor";
@@ -135,8 +153,31 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
                 <div className="flex gap-2.5 flex-wrap justify-center md:justify-start">
                   <Link href={`/badge?url=${encodeURIComponent(rawUrl)}&score=${score}`} className="no-underline text-sm font-medium px-4 py-2.5 rounded-[10px] text-white whitespace-nowrap"
                     style={{ background: "var(--genessa-gradient)", boxShadow: "var(--shadow-sm)" }}>Get free badge</Link>
-                  <button className="text-sm font-medium px-4 py-2.5 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] cursor-pointer"
-                    style={{ fontFamily: "var(--font-geist-sans)" }}>Get full report →</button>
+                  {emailSubmitted ? (
+                    <span className="text-sm text-[var(--fg-2)] px-1 py-2.5">✓ We&apos;ll be in touch</span>
+                  ) : showEmailForm ? (
+                    <form onSubmit={handleEmailSubmit} className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        placeholder="you@company.com"
+                        required
+                        autoFocus
+                        className="text-sm px-3 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] outline-none min-w-[180px]"
+                        style={{ fontFamily: "var(--font-geist-sans)" }}
+                      />
+                      <button type="submit" disabled={emailSubmitting}
+                        className="text-sm font-medium px-4 py-2.5 rounded-[10px] text-white whitespace-nowrap"
+                        style={{ background: "var(--genessa-gradient)", fontFamily: "var(--font-geist-sans)", opacity: emailSubmitting ? 0.7 : 1, cursor: emailSubmitting ? "default" : "pointer" }}>
+                        {emailSubmitting ? "…" : "Send →"}
+                      </button>
+                    </form>
+                  ) : (
+                    <button onClick={() => setShowEmailForm(true)}
+                      className="text-sm font-medium px-4 py-2.5 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] cursor-pointer"
+                      style={{ fontFamily: "var(--font-geist-sans)" }}>Get full report →</button>
+                  )}
                 </div>
               </div>
             </div>
