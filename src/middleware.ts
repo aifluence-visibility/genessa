@@ -30,24 +30,28 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isLogin = pathname === "/admin/login";
+  const isAdminLogin = pathname === "/admin/login";
   const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
 
-  if (!isAdmin) {
+  if (!isAdmin && !isDashboard) {
     return supabaseResponse;
   }
 
-  if (!isLogin && !user) {
-    const redirect = NextResponse.redirect(new URL("/admin/login", request.url));
-    supabaseResponse.cookies.getAll().forEach((c) => {
-      redirect.cookies.set(c.name, c.value);
-    });
-    return redirect;
+  if (!user) {
+    const loginPath = isDashboard ? "/auth/login" : "/admin/login";
+    if (isDashboard || !isAdminLogin) {
+      const redirect = NextResponse.redirect(new URL(loginPath, request.url));
+      supabaseResponse.cookies.getAll().forEach((c) => {
+        redirect.cookies.set(c.name, c.value);
+      });
+      return redirect;
+    }
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*"],
 };
