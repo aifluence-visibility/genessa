@@ -1,0 +1,162 @@
+import { NextRequest } from "next/server";
+
+export const runtime = "edge";
+
+interface CheckResult {
+  name: string;
+  status: "pass" | "partial" | "fail";
+  points: number;
+  weight: number;
+  impact: string;
+  action: string;
+}
+
+interface AuditResponse {
+  url: string;
+  score: number;
+  scores: {
+    readiness: { score: number; checks: CheckResult[] };
+    authority: { score: number | null; pending: boolean };
+    influence: { score: number | null; locked: boolean };
+  };
+  checks: CheckResult[];
+}
+
+interface InsightResponse {
+  hero_text: string | null;
+  strongest_point: string | null;
+  critical_gap: string | null;
+  quick_win: string | null;
+}
+
+async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": "GenessaBot/1.0" } });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchPageTitle(domain: string): Promise<string> {
+  try {
+    const res = await fetchWithTimeout(`https://${domain}`);
+    const html = await res.text();
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    return titleMatch ? titleMatch[1].trim() : domain;
+  } catch {
+    try {
+      const res = await fetchWithTimeout(`http://${domain}`);
+      const html = await res.text();
+      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      return titleMatch ? titleMatch[1].trim() : domain;
+    } catch {
+      return domain;
+    }
+  }
+}
+
+function buildTechnicalScan(checks: CheckResult[]): string {
+  if (!checks?.length) return "No scan results available.";
+  return checks.map((c) => `${c.name}: ${c.status}`).join("; ");
+}
+
+function safeParseJSON(text: string): any {
+  try {
+    return JSON.parse(text.trim());
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
+const fallbackInsight: InsightResponse = {
+  hero_text: "Technical signals detected, strategic analysis pending.",
+  strongest_point: null,
+  critical_gap: null,
+  quick_win: null,
+};
+
+export async function GET(request: NextRequest) {
+  const url = request.nextUrl.searchParams.get("url");
+  if (!url) {
+    return Response.json({ error: "url parameter is required" }, { status: 400 });
+  }
+
+  const domain = url.replace(/^https?:\/\//, "").replace(/\/.*$/, "").trim();
+  const origin = new URL(request.url).origin;
+
+  try {
+    const auditRes = await fetch(`${origin}/api/audit?url=${encodeURIComponent(domain)}`);
+    if (!auditRes.ok) {
+      return Response.json(fallbackInsight);
+    }
+
+    const auditData = (await auditRes.json()) as AuditResponse;
+    const title = await fetchPageTitle(domain);
+    const technicalScan = buildTechnicalScan(auditData.checks);
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+
+    if (!apiKey) {
+      return Response.json(fallbackInsight);
+    }
+
+    const prompt = `Analyze this website for AI visibility.\nDomain: ${domain}\nTitle: ${title}\nTechnical scan: ${technicalScan}\n\nReturn JSON only, no markdown:\n{\n  hero_text: string (max 20 words, specific to this site),\n  strongest_point: string (1 sentence),\n  critical_gap: string (1 sentence),\n  quick_win: string (1 sentence)\n}`;
+
+    const anthropicRes = await fetch("https://api.anthropic.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 300,
+        temperature: 0,
+        messages: [
+          { role: "system", content: "You are an AI visibility analyst. Be specific, concise, no generic advice." },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    if (!anthropicRes.ok) {
+      return Response.json(fallbackInsight);
+    }
+
+    const anthropicJson = await anthropicRes.json();
+    const text =
+      typeof anthropicJson?.completion === "string"
+        ? anthropicJson.completion
+        : typeof anthropicJson?.output_text === "string"
+        ? anthropicJson.output_text
+        : typeof anthropicJson?.message?.content?.[0]?.text === "string"
+        ? anthropicJson.message.content[0].text
+        : typeof anthropicJson?.completion?.[0]?.content?.[0]?.text === "string"
+        ? anthropicJson.completion[0].content[0].text
+        : "";
+
+    const parsed = safeParseJSON(text);
+    if (!parsed || typeof parsed !== "object") {
+      return Response.json(fallbackInsight);
+    }
+
+    return Response.json({
+      hero_text: typeof parsed.hero_text === "string" ? parsed.hero_text : fallbackInsight.hero_text,
+      strongest_point: typeof parsed.strongest_point === "string" ? parsed.strongest_point : null,
+      critical_gap: typeof parsed.critical_gap === "string" ? parsed.critical_gap : null,
+      quick_win: typeof parsed.quick_win === "string" ? parsed.quick_win : null,
+    });
+  } catch {
+    return Response.json(fallbackInsight);
+  }
+}

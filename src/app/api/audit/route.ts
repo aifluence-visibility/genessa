@@ -11,6 +11,14 @@ interface CheckResult {
   action: string;
 }
 
+interface CachedScan {
+  response: unknown;
+  timestamp: number;
+}
+
+const scanCache = new Map<string, CachedScan>();
+const SCAN_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
 async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
@@ -69,7 +77,7 @@ function checkSchema(html: string): CheckResult {
       points: Math.round(weight * 0.5),
       weight,
       impact: "Microdata found but JSON-LD is preferred",
-      action: "Add JSON-LD to homepage → +8 points",
+      action: `Add JSON-LD to homepage → +${weight - Math.round(weight * 0.5)} points`,
     };
   }
 
@@ -79,7 +87,7 @@ function checkSchema(html: string): CheckResult {
     points: 0,
     weight,
     impact: "AI bots struggle to understand content without structured data",
-    action: "Add JSON-LD to homepage → +15 points",
+    action: `Add JSON-LD to homepage → +${weight} points`,
   };
 }
 
@@ -108,7 +116,7 @@ async function checkLlmsTxt(domain: string): Promise<CheckResult> {
     points: 0,
     weight,
     impact: "AI bots cannot understand your content",
-    action: "Create llms.txt file → +10 points",
+    action: `Create llms.txt file → +${weight} points`,
   };
 }
 
@@ -125,7 +133,7 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
         points: 0,
         weight,
         impact: "robots.txt not found — AI bot access policy unclear",
-        action: "Create robots.txt and allow AI bots → +10 points",
+        action: `Create robots.txt and allow AI bots → +${weight} points`,
       };
     }
 
@@ -174,10 +182,10 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
       points: 0,
       weight,
       impact: "All AI bots are blocked",
-      action: "Add GPTBot: Allow to robots.txt → +10 points",
+      action: `Add GPTBot: Allow to robots.txt → +${weight} points`,
     };
   } catch {
-    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt could not be read", action: "Create robots.txt → +10 points" };
+    return { name: "Robots.txt", status: "fail", points: 0, weight, impact: "robots.txt could not be read", action: `Create robots.txt → +${weight} points` };
   }
 }
 
@@ -216,7 +224,7 @@ function checkOpenGraph(html: string): CheckResult {
     points: 0,
     weight,
     impact: "Open Graph tags missing — no preview for AI and social sharing",
-    action: "Add og:title, og:description, og:image → +10 points",
+    action: `Add og:title, og:description, og:image → +${weight} points`,
   };
 }
 
@@ -245,7 +253,7 @@ function checkEntityLinks(html: string): CheckResult {
     points: 0,
     weight,
     impact: "No structured entity links found — AI cannot map to authoritative sources",
-    action: "Add Wikidata or Wikipedia links → +5 points",
+    action: `Add Wikidata or Wikipedia links → +${weight} points`,
   };
 }
 
@@ -269,9 +277,9 @@ function checkH1H2(html: string): CheckResult {
     };
   }
   if (h1s >= 1) {
-    return { name: "H1/H2 Structure", status: "partial", points: Math.round(weight * 0.4), weight, impact: "H1 found but no H2 — content lacks structure for AI", action: "Add H2 subheadings → +6 points" };
+    return { name: "H1/H2 Structure", status: "partial", points: Math.round(weight * 0.4), weight, impact: "H1 found but no H2 — content lacks structure for AI", action: `Add H2 subheadings → +${weight - Math.round(weight * 0.4)} points` };
   }
-  return { name: "H1/H2 Structure", status: "fail", points: 0, weight, impact: "No H1 tag — AI bots cannot identify page topic", action: "Add H1 and H2 tags → +10 points" };
+  return { name: "H1/H2 Structure", status: "fail", points: 0, weight, impact: "No H1 tag — AI bots cannot identify page topic", action: `Add H1 and H2 tags → +${weight} points` };
 }
 
 function checkFreshness(html: string): CheckResult {
@@ -291,7 +299,7 @@ function checkFreshness(html: string): CheckResult {
     const pts = Math.round(weight * 0.5);
     return { name: "Freshness", status: "partial", points: pts, weight, impact: "Some date signals found — explicit dates recommended", action: `Add article:published_time meta → +${weight - pts} points` };
   }
-  return { name: "Freshness", status: "fail", points: 0, weight, impact: "No date signals — AI cannot verify content is current", action: "Add datePublished and dateModified → +10 points" };
+  return { name: "Freshness", status: "fail", points: 0, weight, impact: "No date signals — AI cannot verify content is current", action: `Add datePublished and dateModified → +${weight} points` };
 }
 
 async function checkSpeed(domain: string): Promise<CheckResult> {
@@ -301,7 +309,7 @@ async function checkSpeed(domain: string): Promise<CheckResult> {
     const res = await fetchWithTimeout(`https://${domain}`, 8000);
     const ms = Date.now() - start;
     if (!res.ok) {
-      return { name: "Page Speed", status: "fail", points: 0, weight, impact: "HTTP error — AI bots cannot access the page", action: "Fix server errors → +15 points" };
+      return { name: "Page Speed", status: "fail", points: 0, weight, impact: "HTTP error — AI bots cannot access the page", action: `Fix server errors → +${weight} points` };
     }
     if (ms < 2000) {
       return { name: "Page Speed", status: "pass", points: weight, weight, impact: `Fast load (${ms}ms) — AI bots can crawl quickly`, action: `Page loads in ${ms}ms` };
@@ -310,9 +318,9 @@ async function checkSpeed(domain: string): Promise<CheckResult> {
       const pts = Math.round(weight * 0.5);
       return { name: "Page Speed", status: "partial", points: pts, weight, impact: `Slow load (${ms}ms) — AI bots may skip your page`, action: `Optimize to under 2s → +${weight - pts} points` };
     }
-    return { name: "Page Speed", status: "fail", points: 0, weight, impact: `Very slow (${ms}ms) — AI bots likely skip your site`, action: "Improve server response time → +15 points" };
+    return { name: "Page Speed", status: "fail", points: 0, weight, impact: `Very slow (${ms}ms) — AI bots likely skip your site`, action: `Improve server response time → +${weight} points` };
   } catch {
-    return { name: "Page Speed", status: "fail", points: 0, weight, impact: "Page timed out — AI bots cannot crawl it", action: "Improve server response time → +15 points" };
+    return { name: "Page Speed", status: "fail", points: 0, weight, impact: "Page timed out — AI bots cannot crawl it", action: `Improve server response time → +${weight} points` };
   }
 }
 
@@ -339,7 +347,7 @@ function checkAnswerFirst(html: string): CheckResult {
     const pts = Math.round(weight * 0.3);
     return { name: "Answer-first", status: "partial", points: pts, weight, impact: "Minimal answer-first content detected", action: `Add FAQ schema and lead answers → +${weight - pts} points` };
   }
-  return { name: "Answer-first", status: "fail", points: 0, weight, impact: "No answer-first content — AI cannot extract quick answers", action: "Add FAQPage schema and lead paragraphs → +15 points" };
+  return { name: "Answer-first", status: "fail", points: 0, weight, impact: "No answer-first content — AI cannot extract quick answers", action: `Add FAQPage schema and lead paragraphs → +${weight} points` };
 }
 
 export async function GET(request: NextRequest) {
@@ -349,6 +357,17 @@ export async function GET(request: NextRequest) {
   }
 
   const domain = url.replace(/^https?:\/\//, "").replace(/\/.*$/, "").trim();
+  const now = Date.now();
+  const cachedEntry = scanCache.get(domain);
+
+  if (cachedEntry && now - cachedEntry.timestamp < SCAN_CACHE_TTL_MS) {
+    const nextScan = new Date(cachedEntry.timestamp + SCAN_CACHE_TTL_MS).toISOString();
+    return Response.json({
+      ...(cachedEntry.response as object),
+      cached: true,
+      nextScanAvailable: nextScan,
+    });
+  }
 
   const [html, llmsResult, robotsResult, speedResult] = await Promise.all([
     fetchHTML(domain),
@@ -367,9 +386,14 @@ export async function GET(request: NextRequest) {
   const checks: CheckResult[] = [schemaResult, llmsResult, robotsResult, ogResult, entityResult, h1h2Result, freshnessResult, speedResult, answerFirstResult];
   const score = checks.reduce((sum, c) => sum + c.points, 0);
 
-  return Response.json({
+  const response = {
     url: domain,
     score,
     checks,
-  });
+    cached: false,
+    nextScanAvailable: null,
+  };
+
+  scanCache.set(domain, { response, timestamp: now });
+  return Response.json(response);
 }
