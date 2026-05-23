@@ -245,6 +245,22 @@ type ChecklistEntry = {
   points: number;
 };
 
+type GrowthAuditResult = {
+  overallScore: number;
+  summary: string;
+  priorityActions: {
+    title: string;
+    impact: "high" | "medium" | "low";
+    effort: "quick" | "medium" | "long";
+    agent: "technical" | "content" | "authority";
+  }[];
+  agents: {
+    technical: { score: number; topFix: string };
+    content: { score: number; topFix: string };
+    authority: { score: number; topFix: string };
+  };
+};
+
 const SECTOR_CHECKLIST: Record<string, ChecklistEntry[]> = {
   restaurant: [
     { label: "Google Business Profile'ı optimize et",        priority: "this_week",   points: 15 },
@@ -648,6 +664,8 @@ export default function Dashboard() {
   const [showSectorModal, setShowSectorModal] = useState(false);
   const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditResult, setAuditResult] = useState<GrowthAuditResult | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -767,6 +785,22 @@ export default function Dashboard() {
       });
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function handleGrowthAudit() {
+    if (!pendingScan?.domain || !sector) return;
+    setAuditLoading(true);
+    try {
+      const res = await fetch("/api/growth-audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: pendingScan.domain, sector }),
+      });
+      const data = await res.json();
+      if (data.success) setAuditResult(data);
+    } finally {
+      setAuditLoading(false);
     }
   }
 
@@ -1223,6 +1257,146 @@ export default function Dashboard() {
                 </section>
               </div>
             </div>
+
+            {/* ── Growth Audit ── */}
+            <section style={{
+              borderRadius: 16, padding: "24px 26px",
+              background: "#111827", border: "1px solid #1F2937",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 9, flexShrink: 0,
+                  background: "linear-gradient(135deg, #2952E3, #7B3FE4)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 0 14px rgba(41,82,227,0.35)",
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#F9FAFB" }}>Growth Audit</div>
+                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}>Multi-agent AI analysis</div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGrowthAudit}
+                disabled={auditLoading || !pendingScan?.domain}
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  background: auditLoading ? "#374151" : "#1F2937",
+                  color: auditLoading ? "#9CA3AF" : "#F9FAFB",
+                  border: "1px solid #374151",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: auditLoading ? "not-allowed" : "pointer",
+                  marginTop: 8,
+                  fontFamily: "var(--font-geist-sans)",
+                }}
+              >
+                {auditLoading ? "🔄 Analiz ediliyor... (15-30 sn)" : "🚀 Growth Audit Başlat"}
+              </button>
+
+              {auditResult && (
+                <div style={{ marginTop: 24 }}>
+                  {/* Overall score */}
+                  <div style={{ textAlign: "center", marginBottom: 20 }}>
+                    <div style={{
+                      fontSize: 52, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1,
+                      background: "linear-gradient(135deg, #2952E3, #7B3FE4)",
+                      WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+                    }}>
+                      {auditResult.overallScore}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6B7280", marginTop: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Growth Audit Skoru / 100
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  <p style={{
+                    fontSize: 14, color: "#D1D5DB", lineHeight: 1.65, margin: "0 0 20px",
+                    padding: "14px 16px", background: "#1F2937", borderRadius: 10, border: "1px solid #374151",
+                  }}>
+                    {auditResult.summary}
+                  </p>
+
+                  {/* Agent scores */}
+                  <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+                    {(["technical", "content", "authority"] as const).map((key) => {
+                      const meta = { technical: { icon: "🔍", label: "Technical" }, content: { icon: "📝", label: "Content" }, authority: { icon: "🏆", label: "Authority" } }[key];
+                      return (
+                        <div key={key} style={{
+                          flex: 1, padding: "14px 12px", borderRadius: 10,
+                          background: "#1F2937", border: "1px solid #374151",
+                          textAlign: "center",
+                        }}>
+                          <div style={{ fontSize: 18, marginBottom: 4 }}>{meta.icon}</div>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: "#F9FAFB", letterSpacing: "-0.03em" }}>
+                            {auditResult.agents[key].score}
+                          </div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>
+                            {meta.label}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#4B5563", marginTop: 6, lineHeight: 1.4 }}>
+                            {auditResult.agents[key].topFix}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Priority actions */}
+                  {auditResult.priorityActions.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.09em", marginBottom: 10 }}>
+                        Priority Actions
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {auditResult.priorityActions.map((action, i) => {
+                          const agentIcon = action.agent === "technical" ? "🔍" : action.agent === "content" ? "📝" : "🏆";
+                          const impactColor = action.impact === "high" ? "#DC2626" : action.impact === "medium" ? "#D97706" : "#6B7280";
+                          const impactBg = action.impact === "high" ? "rgba(220,38,38,0.15)" : action.impact === "medium" ? "rgba(217,119,6,0.15)" : "rgba(107,114,128,0.15)";
+                          const effortColor = action.effort === "quick" ? "#16A34A" : action.effort === "medium" ? "#2563EB" : "#7C3AED";
+                          const effortBg = action.effort === "quick" ? "rgba(22,163,74,0.15)" : action.effort === "medium" ? "rgba(37,99,235,0.15)" : "rgba(124,58,237,0.15)";
+                          return (
+                            <div key={i} style={{
+                              display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px",
+                              background: "#1F2937", border: "1px solid #374151", borderRadius: 10,
+                            }}>
+                              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{agentIcon}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, color: "#F9FAFB", fontWeight: 500, lineHeight: 1.4 }}>
+                                  {action.title}
+                                </div>
+                                <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
+                                    background: impactBg, color: impactColor, textTransform: "uppercase", letterSpacing: "0.06em",
+                                  }}>
+                                    {action.impact}
+                                  </span>
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999,
+                                    background: effortBg, color: effortColor, textTransform: "uppercase", letterSpacing: "0.06em",
+                                  }}>
+                                    {action.effort}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
 
             {/* ── Bottom: Technical Issues table ── */}
             <section style={{
