@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getSectorPrompt } from "@/lib/sectorPrompts";
 
 interface CheckResult {
   name: string;
@@ -84,27 +85,6 @@ const fallbackInsight: InsightResponse = {
   quick_win: null,
 };
 
-const SECTOR_LENSES: Record<string, { agentTitle: string; lens: string }> = {
-  restaurant:  { agentTitle: "Restaurant Intelligence Operator",  lens: "Google Maps visibility, TripAdvisor presence, reservation funnel, local SEO" },
-  hospitality: { agentTitle: "Hospitality Intelligence Operator", lens: "OTA presence, direct booking signals, experience content" },
-  clinic:      { agentTitle: "Medical Intelligence Operator",     lens: "medical authority signals, patient acquisition, trust and accreditation" },
-  education:   { agentTitle: "Education Intelligence Operator",   lens: "program pages, accreditation signals, international student content" },
-  ecommerce:   { agentTitle: "Commerce Intelligence Operator",    lens: "product schema, review ecosystem, AI shopping visibility" },
-  saas:        { agentTitle: "SaaS Intelligence Operator",        lens: "documentation quality, comparison pages, AI citation signals" },
-  realestate:  { agentTitle: "Property Intelligence Operator",    lens: "neighbourhood authority, international buyer content" },
-  legal:       { agentTitle: "Legal Intelligence Operator",       lens: "E-E-A-T signals, bar authority, accreditation markup" },
-  finance:     { agentTitle: "Finance Intelligence Operator",     lens: "license signals, compliance content, advisor authority" },
-  creator:     { agentTitle: "Creator Intelligence Operator",     lens: "thought leadership, platform presence, Wikidata authority" },
-  marketing:   { agentTitle: "Marketing Intelligence Operator",   lens: "Clutch authority, case study depth, LinkedIn presence" },
-};
-
-function buildSystemPrompt(sector: string | null | undefined): string {
-  const base = "You are an AI visibility analyst. Be specific, concise, no generic advice.";
-  if (!sector) return base;
-  const info = SECTOR_LENSES[sector];
-  if (!info) return base;
-  return `${base} This business is in the ${sector} sector. Analyze through the lens of a ${info.agentTitle}: focus on ${info.lens}. Tailor all insights, recommendations and action items specifically for this sector.`;
-}
 
 export async function POST(request: NextRequest) {
   let url: string | undefined;
@@ -150,7 +130,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 300,
-        system: buildSystemPrompt(sector),
+        system: `${getSectorPrompt(sector)}\n\nBe specific, concise, no generic advice.`,
         messages: [
           { role: "user", content: prompt },
         ],
