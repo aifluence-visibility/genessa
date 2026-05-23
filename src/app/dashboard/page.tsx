@@ -218,6 +218,7 @@ const SECTOR_AGENTS: Record<string, { name: string; label: string }> = {
   legal:       { name: "Vero",   label: "Legal" },
   finance:     { name: "Calix",  label: "Finance" },
   creator:     { name: "Lumen",  label: "Creator" },
+  marketing:   { name: "Jan",    label: "Marketing" },
 };
 
 const SECTORS = [
@@ -231,6 +232,7 @@ const SECTORS = [
   { key: "legal",       emoji: "⚖️", label: "Legal" },
   { key: "finance",     emoji: "💰", label: "Finance" },
   { key: "creator",     emoji: "✨", label: "Creator" },
+  { key: "marketing",   emoji: "📢", label: "Marketing Agency" },
 ];
 
 // ─── Sector modal ──────────────────────────────────────────────────────────────

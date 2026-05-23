@@ -30,6 +30,7 @@ const AGENTS: AgentColor[] = [
   { name: "Vero",   bg: "rgba(6,182,212,0.10)",    border: "rgba(6,182,212,0.28)",   text: "#0891b2", tooltip: "Legal Intelligence Operator"       },
   { name: "Calix",  bg: "rgba(245,158,11,0.10)",   border: "rgba(245,158,11,0.28)",  text: "#d97706", tooltip: "Finance Intelligence Operator"     },
   { name: "Lumen",  bg: "rgba(132,204,22,0.10)",   border: "rgba(132,204,22,0.28)",  text: "#65a30d", tooltip: "Creator Intelligence Operator"     },
+  { name: "Jan",   bg: "rgba(99,102,241,0.10)",   border: "rgba(99,102,241,0.28)",  text: "#4f46e5", tooltip: "Marketing Intelligence Operator"   },
 ];
 
 function InputField({
