@@ -17,19 +17,19 @@ const SECTORS = [
 
 const CLIENT_COUNTS = ["1–4", "5–10", "11–25", "25+"];
 
-type AgentColor = { name: string; bg: string; border: string; text: string };
+type AgentColor = { name: string; bg: string; border: string; text: string; tooltip: string };
 
 const AGENTS: AgentColor[] = [
-  { name: "Savor",  bg: "rgba(249,115,22,0.10)",  border: "rgba(249,115,22,0.28)",  text: "#ea580c" },
-  { name: "Haven",  bg: "rgba(20,184,166,0.10)",   border: "rgba(20,184,166,0.28)",  text: "#0d9488" },
-  { name: "Vita",   bg: "rgba(236,72,153,0.10)",   border: "rgba(236,72,153,0.28)",  text: "#db2777" },
-  { name: "Sage",   bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.28)",   text: "#16a34a" },
-  { name: "Flux",   bg: "rgba(59,130,246,0.10)",   border: "rgba(59,130,246,0.28)",  text: "#2563eb" },
-  { name: "Nexus",  bg: "rgba(168,85,247,0.10)",   border: "rgba(168,85,247,0.28)",  text: "#9333ea" },
-  { name: "Stone",  bg: "rgba(120,113,108,0.10)",  border: "rgba(120,113,108,0.28)", text: "#57534e" },
-  { name: "Vero",   bg: "rgba(6,182,212,0.10)",    border: "rgba(6,182,212,0.28)",   text: "#0891b2" },
-  { name: "Calix",  bg: "rgba(245,158,11,0.10)",   border: "rgba(245,158,11,0.28)",  text: "#d97706" },
-  { name: "Lumen",  bg: "rgba(132,204,22,0.10)",   border: "rgba(132,204,22,0.28)",  text: "#65a30d" },
+  { name: "Savor",  bg: "rgba(249,115,22,0.10)",  border: "rgba(249,115,22,0.28)",  text: "#ea580c", tooltip: "Restaurant Intelligence Operator"  },
+  { name: "Haven",  bg: "rgba(20,184,166,0.10)",   border: "rgba(20,184,166,0.28)",  text: "#0d9488", tooltip: "Hospitality Intelligence Operator" },
+  { name: "Vita",   bg: "rgba(236,72,153,0.10)",   border: "rgba(236,72,153,0.28)",  text: "#db2777", tooltip: "Medical Intelligence Operator"      },
+  { name: "Sage",   bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.28)",   text: "#16a34a", tooltip: "Education Intelligence Operator"   },
+  { name: "Flux",   bg: "rgba(59,130,246,0.10)",   border: "rgba(59,130,246,0.28)",  text: "#2563eb", tooltip: "Commerce Intelligence Operator"    },
+  { name: "Nexus",  bg: "rgba(168,85,247,0.10)",   border: "rgba(168,85,247,0.28)",  text: "#9333ea", tooltip: "SaaS Intelligence Operator"        },
+  { name: "Stone",  bg: "rgba(120,113,108,0.10)",  border: "rgba(120,113,108,0.28)", text: "#57534e", tooltip: "Property Intelligence Operator"    },
+  { name: "Vero",   bg: "rgba(6,182,212,0.10)",    border: "rgba(6,182,212,0.28)",   text: "#0891b2", tooltip: "Legal Intelligence Operator"       },
+  { name: "Calix",  bg: "rgba(245,158,11,0.10)",   border: "rgba(245,158,11,0.28)",  text: "#d97706", tooltip: "Finance Intelligence Operator"     },
+  { name: "Lumen",  bg: "rgba(132,204,22,0.10)",   border: "rgba(132,204,22,0.28)",  text: "#65a30d", tooltip: "Creator Intelligence Operator"     },
 ];
 
 function InputField({
@@ -156,24 +156,59 @@ function SuccessState({ message }: { message: string }) {
 function AgentPill({ agent }: { agent: AgentColor }) {
   const [hovered, setHovered] = useState(false);
   return (
-    <span
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "inline-flex", alignItems: "center",
-        padding: "5px 13px", borderRadius: 99,
-        background: agent.bg,
-        border: `1px solid ${agent.border}`,
-        color: agent.text,
-        fontSize: 13, fontWeight: 500,
-        cursor: "default",
-        transition: "transform 180ms ease, box-shadow 180ms ease",
-        transform: hovered ? "translateY(-1px)" : "translateY(0)",
-        boxShadow: hovered ? `0 3px 10px ${agent.border}` : "none",
-        fontFamily: "var(--font-geist-sans)",
-      }}
-    >
-      {agent.name}
+    <span style={{ position: "relative", display: "inline-flex" }}>
+      <span
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: "inline-flex", alignItems: "center",
+          padding: "5px 13px", borderRadius: 99,
+          background: agent.bg,
+          border: `1px solid ${agent.border}`,
+          color: agent.text,
+          fontSize: 13, fontWeight: 500,
+          cursor: "default",
+          transition: "transform 180ms ease, box-shadow 180ms ease",
+          transform: hovered ? "translateY(-1px)" : "translateY(0)",
+          boxShadow: hovered ? `0 3px 10px ${agent.border}` : "none",
+          fontFamily: "var(--font-geist-sans)",
+        }}
+      >
+        {agent.name}
+      </span>
+      <span
+        style={{
+          position: "absolute",
+          bottom: "calc(100% + 8px)",
+          left: "50%",
+          transform: `translateX(-50%) translateY(${hovered ? 0 : 4}px)`,
+          opacity: hovered ? 1 : 0,
+          pointerEvents: "none",
+          transition: "opacity 160ms ease, transform 160ms ease",
+          background: "#111827",
+          color: "#fff",
+          fontSize: 11,
+          fontWeight: 500,
+          padding: "5px 9px",
+          borderRadius: 6,
+          whiteSpace: "nowrap",
+          zIndex: 50,
+          fontFamily: "var(--font-geist-sans)",
+          lineHeight: 1,
+        }}
+      >
+        {agent.tooltip}
+        <span style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 0, height: 0,
+          borderLeft: "5px solid transparent",
+          borderRight: "5px solid transparent",
+          borderTop: "5px solid #111827",
+        }} />
+      </span>
     </span>
   );
 }
