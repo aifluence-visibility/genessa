@@ -170,13 +170,23 @@ export async function generateReport(data: ReportData): Promise<void> {
 
     if (pending || value === null) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(26);
       doc.setTextColor(209, 213, 219);
-      doc.text("—", bX + bW / 2, bY + 34, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(156, 163, 175);
-      doc.text("Analysis pending", bX + bW / 2, bY + 45, { align: "center" });
+      if (label === "AUTHORITY") {
+        doc.setFontSize(15);
+        doc.text("Coming", bX + bW / 2, bY + 29, { align: "center" });
+        doc.text("Soon", bX + bW / 2, bY + 40, { align: "center" });
+      } else if (label === "INFLUENCE") {
+        doc.setFontSize(13);
+        doc.text("Premium", bX + bW / 2, bY + 29, { align: "center" });
+        doc.text("Feature", bX + bW / 2, bY + 40, { align: "center" });
+      } else {
+        doc.setFontSize(26);
+        doc.text("—", bX + bW / 2, bY + 34, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text("Analysis pending", bX + bW / 2, bY + 45, { align: "center" });
+      }
     } else {
       const [r, g, b] = scoreRGB(value);
       doc.setFont("helvetica", "bold");
@@ -253,67 +263,62 @@ export async function generateReport(data: ReportData): Promise<void> {
 
   let iy = 37;
 
-  if (ins?.hero_text) {
-    const heroLines = doc.splitTextToSize(ins.hero_text, cW - 16);
-    const heroH = heroLines.length * 5.5 + 18;
-    doc.setFillColor(249, 250, 251);
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(mx, iy, cW, heroH, 3, 3, "FD");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(156, 163, 175);
-    doc.text("SUMMARY", mx + 8, iy + 9);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-    doc.setTextColor(31, 41, 55);
-    doc.text(heroLines, mx + 8, iy + 17);
-    iy += heroH + 6;
-  }
+  // Hero summary — always rendered (falls back to score-based text)
+  const heroText = ins?.hero_text || `${verdict(rs)}: ${summary(rs)}`;
+  const heroLines = doc.splitTextToSize(heroText, cW - 16);
+  const heroH = heroLines.length * 5.5 + 18;
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(mx, iy, cW, heroH, 3, 3, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(156, 163, 175);
+  doc.text("SUMMARY", mx + 8, iy + 9);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.setTextColor(31, 41, 55);
+  doc.text(heroLines, mx + 8, iy + 17);
+  iy += heroH + 6;
 
   const intelRows = [
     {
       label: "STRONGEST POINT",
-      text: ins?.strongest_point ?? null,
+      text: ins?.strongest_point || "Technical infrastructure detected — build on these foundation signals to strengthen AI discoverability.",
       ar: 22, ag: 163, ab: 74,
       br: 240, bg: 253, bb: 244,
     },
     {
       label: "CRITICAL GAP",
-      text: ins?.critical_gap ?? null,
+      text: ins?.critical_gap || "Structured data and schema markup are not fully implemented, limiting AI indexing capabilities.",
       ar: 220, ag: 38, ab: 38,
       br: 254, bg: 242, bb: 242,
     },
     {
       label: "QUICK WIN",
-      text: ins?.quick_win ?? null,
+      text: ins?.quick_win || "Add Organization schema markup and create an llms.txt file to rapidly boost AI visibility.",
       ar: 234, ag: 88, ab: 12,
       br: 255, bg: 247, bb: 237,
     },
   ];
 
   intelRows.forEach(({ label, text, ar, ag, ab, br, bg: bgG, bb }) => {
-    if (!text) return;
     const textLines = doc.splitTextToSize(text, cW - 22);
     const boxH = Math.max(26, textLines.length * 5.2 + 18);
 
-    // Tinted background
     doc.setFillColor(br, bgG, bb);
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.3);
     doc.roundedRect(mx, iy, cW, boxH, 3, 3, "FD");
 
-    // Left accent bar (draw solid rect over the rounded left edge)
     doc.setFillColor(ar, ag, ab);
     doc.rect(mx, iy, 4, boxH, "F");
 
-    // Label
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(ar, ag, ab);
     doc.text(label, mx + 12, iy + 9);
 
-    // Body text
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(55, 65, 81);
@@ -321,17 +326,6 @@ export async function generateReport(data: ReportData): Promise<void> {
 
     iy += boxH + 5;
   });
-
-  if (!ins) {
-    doc.setFillColor(249, 250, 251);
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(mx, iy, cW, 22, 3, 3, "FD");
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(156, 163, 175);
-    doc.text("AI Intelligence data is not available for this scan.", mx + cW / 2, iy + 13, { align: "center" });
-  }
 
   drawFooter(3);
 
