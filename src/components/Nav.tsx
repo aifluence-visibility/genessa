@@ -3,9 +3,13 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
 import { useState } from "react";
+import { SECTOR_META, SECTOR_SLUGS } from "@/lib/sectorMeta";
 
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const [sectorsOpen, setSectorsOpen] = useState(false);
+  const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
+
   return (
     <nav className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-4 md:py-5 flex items-center justify-between relative">
       <Link href="/" className="no-underline">
@@ -15,6 +19,60 @@ export function Nav() {
       {/* Desktop nav */}
       <div className="hidden md:flex items-center gap-7 text-sm text-[var(--fg-2)]">
         <Link href="/how-it-works" className="no-underline font-medium text-[var(--fg-2)]">How it works</Link>
+
+        {/* Sektörler dropdown */}
+        <div
+          className="relative"
+          onMouseEnter={() => setSectorsOpen(true)}
+          onMouseLeave={() => setSectorsOpen(false)}
+        >
+          <button
+            onClick={() => setSectorsOpen((v) => !v)}
+            className="font-medium text-[var(--fg-2)] flex items-center gap-1 cursor-pointer"
+            style={{ background: "none", border: "none", fontSize: "inherit", fontFamily: "inherit", padding: 0 }}
+          >
+            Sektörler
+            <svg
+              width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transition: "transform 150ms", transform: sectorsOpen ? "rotate(180deg)" : "none" }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {sectorsOpen && (
+            <div
+              style={{
+                position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)",
+                zIndex: 100,
+                background: "#111827", border: "1px solid #1F2937",
+                borderRadius: 8, minWidth: 220,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
+                padding: "4px 0",
+              }}
+            >
+              {SECTOR_SLUGS.map((slug) => {
+                const m = SECTOR_META[slug];
+                return (
+                  <Link
+                    key={slug}
+                    href={`/for/${slug}`}
+                    onClick={() => setSectorsOpen(false)}
+                    className="flex items-center gap-2.5 no-underline"
+                    style={{ padding: "8px 16px", color: "#E5E7EB", fontSize: 13, fontWeight: 500 }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#1F2937")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    <span style={{ fontSize: 15 }}>{m.emoji}</span>
+                    <span>{m.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <Link href="/directory" className="no-underline font-medium text-[var(--fg-2)]">Directory</Link>
         <Link href="/pricing" className="no-underline font-medium text-[var(--fg-2)]">Pricing</Link>
         <Link href="/faq" className="no-underline font-medium text-[var(--fg-2)]">FAQ</Link>
@@ -40,6 +98,43 @@ export function Nav() {
       {open && (
         <div className="absolute top-full left-0 right-0 z-50 bg-[var(--bg)] border-b border-[var(--border)] px-4 py-4 flex flex-col gap-4 md:hidden shadow-lg">
           <Link href="/how-it-works" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">How it works</Link>
+
+          {/* Mobile Sektörler */}
+          <div>
+            <button
+              onClick={() => setMobileSectorsOpen((v) => !v)}
+              className="font-medium text-sm text-[var(--fg-2)] flex items-center gap-1 w-full"
+              style={{ background: "none", border: "none", fontFamily: "inherit", padding: 0, cursor: "pointer" }}
+            >
+              Sektörler
+              <svg
+                width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transition: "transform 150ms", transform: mobileSectorsOpen ? "rotate(180deg)" : "none" }}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {mobileSectorsOpen && (
+              <div className="mt-2 flex flex-col gap-1 pl-2 border-l-2" style={{ borderColor: "var(--border)" }}>
+                {SECTOR_SLUGS.map((slug) => {
+                  const m = SECTOR_META[slug];
+                  return (
+                    <Link
+                      key={slug}
+                      href={`/for/${slug}`}
+                      onClick={() => { setOpen(false); setMobileSectorsOpen(false); }}
+                      className="flex items-center gap-2 no-underline py-1.5 text-sm text-[var(--fg-2)] font-medium"
+                    >
+                      <span>{m.emoji}</span>
+                      <span>{m.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <Link href="/directory" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Directory</Link>
           <Link href="/pricing" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Pricing</Link>
           <Link href="/faq" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">FAQ</Link>

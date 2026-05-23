@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { SECTOR_META, SECTOR_SLUGS } from "@/lib/sectorMeta";
 
 function XIcon() {
   return (
@@ -20,36 +21,79 @@ function GitHubIcon() {
 function LinkedInIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-label="LinkedIn">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 23.2 0 22.222 0h.003z" />
     </svg>
   );
 }
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--border)] mt-16 px-4 md:px-8 py-8 md:py-10">
-      <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-4">
-          <Logo size={22} />
+    <footer className="border-t border-[var(--border)] mt-16 px-4 md:px-8 py-10 md:py-14">
+      <div className="max-w-[1200px] mx-auto">
+
+        {/* Top row: logo + columns */}
+        <div className="flex flex-col md:flex-row gap-10 md:gap-16 mb-10">
+
+          {/* Brand */}
+          <div className="shrink-0">
+            <Logo size={22} />
+            <p className="text-[13px] text-[var(--fg-3)] mt-3 max-w-[200px] leading-[1.55]">
+              AI visibility scoring for every business sector.
+            </p>
+          </div>
+
+          {/* Pages */}
+          <div className="flex flex-col gap-2.5">
+            <div className="text-[11px] font-semibold text-[var(--fg-3)] uppercase tracking-[0.08em] mb-1">Pages</div>
+            <Link href="/how-it-works" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">How it works</Link>
+            <Link href="/pricing" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">Pricing</Link>
+            <Link href="/faq" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">FAQ</Link>
+            <Link href="/contact" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">Contact</Link>
+            <Link href="/partner" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">Partner</Link>
+          </div>
+
+          {/* Sectors */}
+          <div className="flex flex-col gap-2.5">
+            <div className="text-[11px] font-semibold text-[var(--fg-3)] uppercase tracking-[0.08em] mb-1">Sektörler</div>
+            {SECTOR_SLUGS.map((slug) => {
+              const m = SECTOR_META[slug];
+              return (
+                <Link
+                  key={slug}
+                  href={`/for/${slug}`}
+                  className="no-underline text-[13px] text-[var(--fg-2)] font-medium flex items-center gap-1.5"
+                >
+                  <span style={{ fontSize: 13 }}>{m.emoji}</span>
+                  <span>{m.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Legal */}
+          <div className="flex flex-col gap-2.5">
+            <div className="text-[11px] font-semibold text-[var(--fg-3)] uppercase tracking-[0.08em] mb-1">Legal</div>
+            <Link href="/privacy" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">Privacy</Link>
+            <Link href="/terms" className="no-underline text-[13px] text-[var(--fg-2)] font-medium">Terms</Link>
+          </div>
+        </div>
+
+        {/* Bottom row: copyright + social */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[var(--border)]">
           <div className="text-[13px] text-[var(--fg-3)]">© 2026 Genessa Inc.</div>
+          <div className="flex items-center gap-4">
+            <a href="https://x.com/genessa_io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
+              <XIcon />
+            </a>
+            <a href="https://github.com/genessa-io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
+              <GitHubIcon />
+            </a>
+            <a href="https://linkedin.com/company/genessa-io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
+              <LinkedInIcon />
+            </a>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-5 text-[13px] text-[var(--fg-2)]">
-          <Link href="/privacy" className="no-underline font-medium text-[var(--fg-2)]">Privacy</Link>
-          <Link href="/terms" className="no-underline font-medium text-[var(--fg-2)]">Terms</Link>
-          <Link href="/faq" className="no-underline font-medium text-[var(--fg-2)]">FAQ</Link>
-          <Link href="/contact" className="no-underline font-medium text-[var(--fg-2)]">Contact</Link>
-        </div>
-        <div className="flex items-center gap-4">
-          <a href="https://x.com/genessa_io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
-            <XIcon />
-          </a>
-          <a href="https://github.com/genessa-io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
-            <GitHubIcon />
-          </a>
-          <a href="https://linkedin.com/company/genessa-io" target="_blank" rel="noopener noreferrer" className="text-[var(--fg-3)] hover:text-[var(--fg-2)] transition-colors">
-            <LinkedInIcon />
-          </a>
-        </div>
+
       </div>
     </footer>
   );
