@@ -56,7 +56,7 @@ const plans = [
     audience: "For founders & marketers serious about AI visibility.",
     features: [
       { icon: "check", text: "1 domain" },
-      { icon: "check", text: "4 scans per week" },
+      { icon: "check", text: "2 scans per week" },
       { icon: "check", text: "AI Readiness Score (full)" },
       { icon: "check", text: "AI Authority Score (full detail)" },
       { icon: "lock", text: "AI Influence Score (locked)" },
@@ -76,7 +76,8 @@ const plans = [
     popular: false,
     audience: "For agencies and teams managing multiple brands.",
     features: [
-      { icon: "check", text: "5 domains" },
+      { icon: "check", text: "1 domain" },
+      { icon: "check", text: "4 scans per week" },
       { icon: "check", text: "Everything in Starter" },
       { icon: "check", text: "AI Influence Score (full)" },
       { icon: "check", text: "AI mention tracking (weekly)" },
@@ -106,7 +107,7 @@ type CellValue = string | { text: string; muted?: boolean };
 
 const tableRows: { label: string; free: CellValue; starter: CellValue; pro: CellValue }[] = [
   { label: "Domains",              free: "1",                               starter: "1",                               pro: "1"                                        },
-  { label: "Scan limit",           free: "1 per month",                     starter: "4 per week",                      pro: "4 per week"                               },
+  { label: "Scan limit",           free: "1 per month",                     starter: "2 per week",                      pro: "4 per week"                               },
   { label: "AI Readiness Score",   free: "✓",                               starter: "Full detail",                     pro: "Full detail"                              },
   { label: "AI Authority Score",   free: { text: "Number only", muted: true }, starter: "Full detail",                  pro: "Full detail"                              },
   { label: "AI Influence Score",   free: { text: "Locked", muted: true },   starter: { text: "Locked", muted: true },   pro: "✓"                                        },

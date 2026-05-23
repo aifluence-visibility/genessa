@@ -19,6 +19,7 @@ export function Nav() {
         <Link href="/pricing" className="no-underline font-medium text-[var(--fg-2)]">Pricing</Link>
         <Link href="/faq" className="no-underline font-medium text-[var(--fg-2)]">FAQ</Link>
         <Link href="/contact" className="no-underline font-medium text-[var(--fg-2)]">Contact</Link>
+        <Link href="/partner" className="no-underline font-medium text-[var(--fg-2)]">Partner</Link>
         <Link href="/" className="no-underline font-semibold" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
       </div>
       <div className="hidden md:flex items-center gap-3">
@@ -43,6 +44,7 @@ export function Nav() {
           <Link href="/pricing" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Pricing</Link>
           <Link href="/faq" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">FAQ</Link>
           <Link href="/contact" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Contact</Link>
+          <Link href="/partner" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Partner</Link>
           <Link href="/" onClick={() => setOpen(false)} className="no-underline font-semibold text-sm" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
             <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>

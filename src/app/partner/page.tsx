@@ -17,6 +17,21 @@ const SECTORS = [
 
 const CLIENT_COUNTS = ["1–4", "5–10", "11–25", "25+"];
 
+type AgentColor = { name: string; bg: string; border: string; text: string };
+
+const AGENTS: AgentColor[] = [
+  { name: "Savor",  bg: "rgba(249,115,22,0.10)",  border: "rgba(249,115,22,0.28)",  text: "#ea580c" },
+  { name: "Haven",  bg: "rgba(20,184,166,0.10)",   border: "rgba(20,184,166,0.28)",  text: "#0d9488" },
+  { name: "Vita",   bg: "rgba(236,72,153,0.10)",   border: "rgba(236,72,153,0.28)",  text: "#db2777" },
+  { name: "Sage",   bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.28)",   text: "#16a34a" },
+  { name: "Flux",   bg: "rgba(59,130,246,0.10)",   border: "rgba(59,130,246,0.28)",  text: "#2563eb" },
+  { name: "Nexus",  bg: "rgba(168,85,247,0.10)",   border: "rgba(168,85,247,0.28)",  text: "#9333ea" },
+  { name: "Stone",  bg: "rgba(120,113,108,0.10)",  border: "rgba(120,113,108,0.28)", text: "#57534e" },
+  { name: "Vero",   bg: "rgba(6,182,212,0.10)",    border: "rgba(6,182,212,0.28)",   text: "#0891b2" },
+  { name: "Calix",  bg: "rgba(245,158,11,0.10)",   border: "rgba(245,158,11,0.28)",  text: "#d97706" },
+  { name: "Lumen",  bg: "rgba(132,204,22,0.10)",   border: "rgba(132,204,22,0.28)",  text: "#65a30d" },
+];
+
 function InputField({
   label, type = "text", value, onChange, placeholder, required = true,
 }: {
@@ -119,6 +134,50 @@ function CheckIcon() {
   );
 }
 
+function SuccessState({ message }: { message: string }) {
+  return (
+    <div style={{ textAlign: "center", padding: "32px 0" }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: "50%", margin: "0 auto 16px",
+        background: "linear-gradient(135deg, rgba(41,82,227,0.1), rgba(123,63,228,0.1))",
+        border: "1px solid rgba(41,82,227,0.2)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--genessa-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <p style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)", margin: "0 0 6px" }}>Application received</p>
+      <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0 }}>{message}</p>
+    </div>
+  );
+}
+
+function AgentPill({ agent }: { agent: AgentColor }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <span
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "inline-flex", alignItems: "center",
+        padding: "5px 13px", borderRadius: 99,
+        background: agent.bg,
+        border: `1px solid ${agent.border}`,
+        color: agent.text,
+        fontSize: 13, fontWeight: 500,
+        cursor: "default",
+        transition: "transform 180ms ease, box-shadow 180ms ease",
+        transform: hovered ? "translateY(-1px)" : "translateY(0)",
+        boxShadow: hovered ? `0 3px 10px ${agent.border}` : "none",
+        fontFamily: "var(--font-geist-sans)",
+      }}
+    >
+      {agent.name}
+    </span>
+  );
+}
+
 export default function PartnerPage() {
   const [progForm, setProgForm] = useState({ name: "", email: "", sector: "", message: "" });
   const [progStatus, setProgStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -165,131 +224,160 @@ export default function PartnerPage() {
   return (
     <>
       <Nav />
-      <main className="w-full max-w-[860px] mx-auto px-4 md:px-8" style={{ paddingTop: 48, paddingBottom: 96 }}>
 
-        {/* ── Hero ── */}
-        <div className="relative text-center" style={{ marginBottom: 72 }}>
-          <div className="absolute pointer-events-none" style={{ inset: -20, background: "radial-gradient(50% 60% at 50% 30%, rgba(75,123,255,0.14) 0%, rgba(123,63,228,0) 70%)" }} />
-          <div className="relative">
-            <div className="eyebrow" style={{ marginBottom: 16 }}>Partner</div>
-            <h1 className="text-3xl md:text-[52px]" style={{ fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1.08, margin: "0 0 14px" }}>
-              Grow with{" "}
-              <em className="serif-italic gradient-text" style={{ paddingRight: 4 }}>Genessa</em>
-            </h1>
-            <p className="text-sm md:text-[17px]" style={{ color: "var(--fg-2)", margin: "0 auto 32px", maxWidth: 440 }}>
-              Two paths, one platform. Choose what fits your goal.
-            </p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <button
-                onClick={() => scrollTo("program")}
-                style={{
-                  padding: "13px 26px", borderRadius: 10,
-                  background: "var(--genessa-gradient)", color: "#fff",
-                  fontSize: 14, fontWeight: 500, border: "none", cursor: "pointer",
-                  boxShadow: "var(--shadow-glow)", fontFamily: "var(--font-geist-sans)",
-                }}
-              >
-                AI Visibility Program →
-              </button>
-              <button
-                onClick={() => scrollTo("agency")}
-                style={{
-                  padding: "13px 26px", borderRadius: 10,
-                  background: "var(--bg)", color: "var(--fg)",
-                  fontSize: 14, fontWeight: 500,
-                  border: "1px solid var(--border-strong)", cursor: "pointer",
-                  fontFamily: "var(--font-geist-sans)",
-                }}
-              >
-                Agency Partner →
-              </button>
-            </div>
+      {/* ── Hero — full-width gradient ── */}
+      <div style={{
+        background: "linear-gradient(180deg, rgba(75,123,255,0.09) 0%, rgba(123,63,228,0.05) 55%, transparent 100%)",
+        borderBottom: "1px solid var(--border)",
+        paddingTop: 72,
+        paddingBottom: 72,
+      }}>
+        <div className="w-full px-4 md:px-8" style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>Partner</div>
+          <h1 style={{ fontSize: "clamp(36px, 5vw, 56px)", fontWeight: 500, letterSpacing: "-0.04em", lineHeight: 1.06, margin: "0 0 14px" }}>
+            Grow with{" "}
+            <em className="serif-italic gradient-text" style={{ paddingRight: 4 }}>Genessa</em>
+          </h1>
+          <p style={{ fontSize: 17, color: "var(--fg-2)", margin: "0 auto 48px", maxWidth: 400 }}>
+            Two paths, one platform.
+          </p>
+
+          {/* Two hero cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5" style={{ maxWidth: 680, margin: "0 auto" }}>
+            <button
+              onClick={() => scrollTo("program")}
+              style={{
+                textAlign: "left", padding: "24px 24px 20px",
+                borderRadius: 16, border: "1px solid var(--border)",
+                background: "var(--bg)", cursor: "pointer",
+                boxShadow: "var(--shadow-sm)",
+                display: "flex", flexDirection: "column", gap: 10,
+                fontFamily: "var(--font-geist-sans)",
+              }}
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                background: "linear-gradient(135deg, rgba(41,82,227,0.12), rgba(123,63,228,0.12))",
+                border: "1px solid rgba(41,82,227,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--genessa-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg)", marginBottom: 5 }}>
+                  AI Visibility Program
+                </div>
+                <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
+                  Your sector-specific AI consultant, working toward your growth goals.
+                </p>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--genessa-blue)" }}>Learn more →</span>
+            </button>
+
+            <button
+              onClick={() => scrollTo("agency")}
+              style={{
+                textAlign: "left", padding: "24px 24px 20px",
+                borderRadius: 16, border: "1px solid var(--border)",
+                background: "var(--bg)", cursor: "pointer",
+                boxShadow: "var(--shadow-sm)",
+                display: "flex", flexDirection: "column", gap: 10,
+                fontFamily: "var(--font-geist-sans)",
+              }}
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                background: "linear-gradient(135deg, rgba(41,82,227,0.12), rgba(123,63,228,0.12))",
+                border: "1px solid rgba(41,82,227,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--genessa-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg)", marginBottom: 5 }}>
+                  Agency Partner
+                </div>
+                <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
+                  AI visibility for all your clients under one dashboard built for agencies.
+                </p>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "var(--genessa-blue)" }}>Learn more →</span>
+            </button>
           </div>
         </div>
+      </div>
+
+      <main className="w-full max-w-[1100px] mx-auto px-4 md:px-8" style={{ paddingTop: 80, paddingBottom: 96 }}>
 
         {/* ── Section 1 — AI Visibility Program ── */}
         <section id="program" style={{ scrollMarginTop: 80, marginBottom: 96 }}>
-          <div style={{ marginBottom: 40 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>AI Visibility Program</div>
-            <h2 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em", margin: "0 0 14px" }}>
-              Your industry-specific<br />AI consultant
-            </h2>
-            <p style={{ fontSize: 16, color: "var(--fg-2)", lineHeight: 1.65, maxWidth: 560, margin: 0 }}>
-              Genessa assigns you a specialist agent trained on your sector — not a generic AI tool,
-              but a consultant that speaks your industry&apos;s language and works toward your specific growth goals.
-            </p>
-          </div>
 
-          {/* How it works */}
-          <div style={{
-            borderRadius: 16, padding: "28px 32px",
-            background: "var(--bg-subtle)", border: "1px solid var(--border)",
-            marginBottom: 32,
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 22, fontFamily: "var(--font-geist-mono)" }}>
-              How it works
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16" style={{ marginBottom: 48 }}>
+
+            {/* Left: heading + description + agent pills */}
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>AI Visibility Program</div>
+              <h2 style={{ fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 600, letterSpacing: "-0.03em", margin: "0 0 16px", lineHeight: 1.2 }}>
+                Your industry-specific<br />AI consultant
+              </h2>
+              <p style={{ fontSize: 15, color: "var(--fg-2)", lineHeight: 1.65, margin: "0 0 32px" }}>
+                Genessa assigns you a specialist agent trained on your sector — not a generic AI tool,
+                but a consultant that speaks your industry&apos;s language and works toward your specific growth goals.
+              </p>
+              <div>
+                <div style={{ fontSize: 11, fontFamily: "var(--font-geist-mono)", color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>
+                  Meet the agents
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {AGENTS.map((agent) => (
+                    <AgentPill key={agent.name} agent={agent} />
+                  ))}
+                </div>
+              </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+            {/* Right: duration cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, justifyContent: "center" }}>
               {[
-                {
-                  step: "01",
-                  title: "Choose your sector",
-                  body: "Restaurant, clinic, SaaS, legal, education, hotel, creator — pick the one that describes your business.",
-                },
-                {
-                  step: "02",
-                  title: "Your agent is assigned",
-                  body: "A specialist agent (Savor, Vita, Sage, Nexus, and others) is configured for your domain, language, and growth metrics.",
-                },
-                {
-                  step: "03",
-                  title: "Weekly action steps begin",
-                  body: "Every week you receive a prioritised list of concrete actions — schema fixes, content improvements, authority signals — each tied to a score impact.",
-                },
-              ].map(({ step, title, body }) => (
-                <div key={step} style={{ display: "flex", gap: 18 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                    background: "linear-gradient(135deg, rgba(41,82,227,0.1), rgba(123,63,228,0.1))",
-                    border: "1px solid rgba(41,82,227,0.18)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: "var(--font-geist-mono)", fontSize: 10, fontWeight: 700,
-                    color: "var(--genessa-blue)",
-                  }}>
-                    {step}
-                  </div>
+                { duration: "3 months",  tag: "Quick Start",  scope: "Phase 1–2", popular: false },
+                { duration: "6 months",  tag: "Most Popular", scope: "Phase 1–3", popular: true  },
+                { duration: "12 months", tag: "Full Program",  scope: "Phase 1–4", popular: false },
+              ].map(({ duration, tag, scope, popular }) => (
+                <div
+                  key={duration}
+                  style={{
+                    borderRadius: 14, padding: "18px 22px",
+                    background: popular
+                      ? "linear-gradient(var(--bg),var(--bg)) padding-box, var(--genessa-gradient) border-box"
+                      : "var(--bg)",
+                    border: popular ? "1.5px solid transparent" : "1px solid var(--border)",
+                    boxShadow: popular ? "var(--shadow-glow)" : "var(--shadow-sm)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                  }}
+                >
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg)", marginBottom: 4 }}>{title}</div>
-                    <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}>{body}</p>
+                    <div style={{
+                      fontSize: 10, fontFamily: "var(--font-geist-mono)", textTransform: "uppercase",
+                      letterSpacing: "0.08em", marginBottom: 4,
+                      color: popular ? "var(--genessa-blue)" : "var(--fg-3)",
+                    }}>{tag}</div>
+                    <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg)" }}>{duration}</div>
+                    <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 3 }}>{scope}</div>
                   </div>
+                  <div style={{ fontSize: 12, color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)" }}>Custom pricing</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Program options */}
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
-            {[
-              { duration: "3 months", tag: "Quick start" },
-              { duration: "6 months", tag: "Most popular" },
-              { duration: "12 months", tag: "Full programme" },
-            ].map(({ duration, tag }) => (
-              <div
-                key={duration}
-                style={{
-                  flex: 1, minWidth: 160, borderRadius: 12, padding: "18px 20px",
-                  background: "var(--bg)", border: "1px solid var(--border)",
-                  boxShadow: "var(--shadow-sm)",
-                }}
-              >
-                <div style={{ fontSize: 10, fontFamily: "var(--font-geist-mono)", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--fg-3)", marginBottom: 6 }}>{tag}</div>
-                <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg)", marginBottom: 4 }}>{duration}</div>
-                <div style={{ fontSize: 12, color: "var(--fg-3)" }}>Custom pricing</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Contact form */}
+          {/* Full-width apply form */}
           <div style={{
             borderRadius: 16, padding: "32px",
             background: "var(--bg)", border: "1px solid var(--border)",
@@ -301,25 +389,11 @@ export default function PartnerPage() {
                 Tell us about your business and we&apos;ll be in touch within 24 hours.
               </p>
             </div>
-
             {progStatus === "sent" ? (
-              <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", margin: "0 auto 16px",
-                  background: "linear-gradient(135deg, rgba(41,82,227,0.1), rgba(123,63,228,0.1))",
-                  border: "1px solid rgba(41,82,227,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--genessa-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)", margin: "0 0 6px" }}>Application received</p>
-                <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0 }}>We&apos;ll be in touch within 24 hours.</p>
-              </div>
+              <SuccessState message="We'll be in touch within 24 hours." />
             ) : (
               <form onSubmit={handleProgSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
                   <InputField label="Name" value={progForm.name} onChange={(v) => setProgForm((f) => ({ ...f, name: v }))} placeholder="Your name" />
                   <InputField label="Email" type="email" value={progForm.email} onChange={(v) => setProgForm((f) => ({ ...f, email: v }))} placeholder="you@company.com" />
                 </div>
@@ -356,16 +430,15 @@ export default function PartnerPage() {
         <section id="agency" style={{ scrollMarginTop: 80 }}>
           <div style={{ marginBottom: 40 }}>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Agency Partner</div>
-            <h2 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em", margin: "0 0 14px" }}>
+            <h2 style={{ fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 600, letterSpacing: "-0.03em", margin: "0 0 14px", lineHeight: 1.2 }}>
               AI visibility<br />for your clients
             </h2>
-            <p style={{ fontSize: 16, color: "var(--fg-2)", lineHeight: 1.65, maxWidth: 560, margin: 0 }}>
+            <p style={{ fontSize: 15, color: "var(--fg-2)", lineHeight: 1.65, maxWidth: 560, margin: 0 }}>
               Managing 5 or more clients? Become a Genessa Agency Partner and give your clients
               their own AI visibility dashboard — under your brand, on your terms.
             </p>
           </div>
 
-          {/* What's included */}
           <div style={{
             borderRadius: 16, padding: "28px 32px",
             background: "var(--bg-subtle)", border: "1px solid var(--border)",
@@ -374,7 +447,7 @@ export default function PartnerPage() {
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 20, fontFamily: "var(--font-geist-mono)" }}>
               What&apos;s included
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 32px" }}>
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "12px 32px" }}>
               {[
                 "Manage all client domains in one dashboard",
                 "PDF reports ready to send to clients",
@@ -391,7 +464,6 @@ export default function PartnerPage() {
             </div>
           </div>
 
-          {/* Agency contact form */}
           <div style={{
             borderRadius: 16, padding: "32px",
             background: "var(--bg)", border: "1px solid var(--border)",
@@ -403,29 +475,15 @@ export default function PartnerPage() {
                 We&apos;ll reach out within 24 hours to discuss a custom plan.
               </p>
             </div>
-
             {agencyStatus === "sent" ? (
-              <div style={{ textAlign: "center", padding: "32px 0" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%", margin: "0 auto 16px",
-                  background: "linear-gradient(135deg, rgba(41,82,227,0.1), rgba(123,63,228,0.1))",
-                  border: "1px solid rgba(41,82,227,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--genessa-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)", margin: "0 0 6px" }}>Application received</p>
-                <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0 }}>We&apos;ll be in touch within 24 hours.</p>
-              </div>
+              <SuccessState message="We'll reach out within 24 hours to discuss a custom plan." />
             ) : (
               <form onSubmit={handleAgencySubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
                   <InputField label="Your name" value={agencyForm.name} onChange={(v) => setAgencyForm((f) => ({ ...f, name: v }))} placeholder="Full name" />
                   <InputField label="Agency name" value={agencyForm.agency} onChange={(v) => setAgencyForm((f) => ({ ...f, agency: v }))} placeholder="Acme Digital" />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
                   <SelectField label="Number of clients" value={agencyForm.clients} onChange={(v) => setAgencyForm((f) => ({ ...f, clients: v }))} options={CLIENT_COUNTS} />
                   <InputField label="Email" type="email" value={agencyForm.email} onChange={(v) => setAgencyForm((f) => ({ ...f, email: v }))} placeholder="you@agency.com" />
                 </div>
