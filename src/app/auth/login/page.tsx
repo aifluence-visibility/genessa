@@ -84,7 +84,8 @@ export default function Login() {
       if (authError) {
         setError(authError.message);
       } else {
-        router.push("/dashboard");
+        const next = new URLSearchParams(window.location.search).get("next");
+        router.push(next || "/dashboard");
         router.refresh();
       }
     } catch (err) {

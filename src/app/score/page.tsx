@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, Suspense, FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { ScoreRing } from "@/components/ScoreRing";
 import { StatusPill } from "@/components/StatusPill";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface CheckResult {
   name: string;
@@ -37,6 +38,7 @@ function ScorePageContent() {
 }
 
 function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
+  const router = useRouter();
   const [result, setResult] = useState<AuditResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState<InsightResult | null>(null);
@@ -77,6 +79,26 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
       cancelled = true;
     };
   }, [rawUrl]);
+
+  async function handleGetFullReport() {
+    const scanData = {
+      domain: rawUrl,
+      readiness: result?.score ?? null,
+      authority: null,
+      influence: null,
+      insight: insight ?? null,
+    };
+    localStorage.setItem("pendingScan", JSON.stringify(scanData));
+
+    const supabase = createSupabaseBrowserClient();
+    const { data } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      router.push("/auth/login?next=/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
+  }
 
   async function handleEmailSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -174,7 +196,7 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
                       </button>
                     </form>
                   ) : (
-                    <button onClick={() => setShowEmailForm(true)}
+                    <button onClick={handleGetFullReport}
                       className="text-sm font-medium px-4 py-2.5 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] cursor-pointer"
                       style={{ fontFamily: "var(--font-geist-sans)" }}>Get full report →</button>
                   )}

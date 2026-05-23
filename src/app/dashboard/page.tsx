@@ -6,6 +6,19 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+interface PendingScan {
+  domain: string;
+  readiness: number | null;
+  authority: number | null;
+  influence: number | null;
+  insight: {
+    hero_text: string | null;
+    strongest_point: string | null;
+    critical_gap: string | null;
+    quick_win: string | null;
+  } | null;
+}
+
 // ─── Score card ───────────────────────────────────────────────────────────────
 
 function ScoreCard({
@@ -166,6 +179,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingScan, setPendingScan] = useState<PendingScan | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -178,6 +192,16 @@ export default function Dashboard() {
       }
     });
   }, [router]);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("pendingScan");
+    if (raw) {
+      try {
+        setPendingScan(JSON.parse(raw));
+      } catch { /* invalid JSON, ignore */ }
+      localStorage.removeItem("pendingScan");
+    }
+  }, []);
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
@@ -193,7 +217,7 @@ export default function Dashboard() {
     );
   }
 
-  const hasScan = false; // will be true once Supabase scan history is integrated
+  const hasScan = pendingScan !== null;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
@@ -351,8 +375,8 @@ export default function Dashboard() {
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: "var(--fg)" }}>example.com</div>
-                    <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 2 }}>Last scan: 3 days ago</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: "var(--fg)" }}>{pendingScan!.domain}</div>
+                    <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 2 }}>Just scanned</div>
                   </div>
                   <button
                     style={{
@@ -372,8 +396,8 @@ export default function Dashboard() {
                 </div>
 
                 <div style={{ display: "flex", gap: 14 }}>
-                  <ScoreCard label="AI Readiness" score={68} delta={7} />
-                  <ScoreCard label="Authority" score={52} delta={6} />
+                  <ScoreCard label="AI Readiness" score={pendingScan!.readiness} delta={null} />
+                  <ScoreCard label="Authority" score={pendingScan!.authority} delta={null} />
                   <ScoreCard label="AI Influence" score={null} delta={null} locked />
                 </div>
               </section>
@@ -483,30 +507,40 @@ export default function Dashboard() {
               >
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg)", marginBottom: 18 }}>AI Intelligence</div>
 
-                <InsightBlock
-                  icon="✓"
-                  label="Strongest point"
-                  color="var(--score-good)"
-                  text="Your site consistently uses structured headings and maintains a clear topical focus — AI systems can parse your content intent reliably."
-                />
-                <InsightBlock
-                  icon="✗"
-                  label="Critical gap"
-                  color="var(--score-bad)"
-                  text="No JSON-LD schema detected. AI crawlers cannot confidently identify your organisation, services, or entity relationships."
-                />
-                <InsightBlock
-                  icon="💡"
-                  label="Quick win"
-                  color="var(--genessa-blue)"
-                  text="Add an answer-first paragraph to your homepage. This single change typically adds 10–15 points to your Readiness score."
-                />
-                <InsightBlock
-                  icon="⚡"
-                  label="Opportunity"
-                  color="#f59e0b"
-                  text="Your content covers strong niche topics but lacks entity links to authoritative sources — adding 3–5 would strengthen Authority signals."
-                />
+                {pendingScan!.insight?.hero_text && (
+                  <p style={{ fontSize: 14, fontWeight: 500, color: "var(--fg)", lineHeight: 1.6, marginBottom: 16 }}>
+                    {pendingScan!.insight.hero_text}
+                  </p>
+                )}
+                {pendingScan!.insight?.strongest_point && (
+                  <InsightBlock
+                    icon="✓"
+                    label="Strongest point"
+                    color="var(--score-good)"
+                    text={pendingScan!.insight.strongest_point}
+                  />
+                )}
+                {pendingScan!.insight?.critical_gap && (
+                  <InsightBlock
+                    icon="✗"
+                    label="Critical gap"
+                    color="var(--score-bad)"
+                    text={pendingScan!.insight.critical_gap}
+                  />
+                )}
+                {pendingScan!.insight?.quick_win && (
+                  <InsightBlock
+                    icon="💡"
+                    label="Quick win"
+                    color="var(--genessa-blue)"
+                    text={pendingScan!.insight.quick_win}
+                  />
+                )}
+                {!pendingScan!.insight && (
+                  <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.6 }}>
+                    AI insights are generated during the scan. Run a new scan to see personalised recommendations.
+                  </p>
+                )}
               </section>
             </div>
           </div>
