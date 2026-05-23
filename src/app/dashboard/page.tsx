@@ -327,12 +327,44 @@ export default function Dashboard() {
   }, [router]);
 
   useEffect(() => {
+    if (!user) return;
+    const supabase = createSupabaseBrowserClient();
     const raw = localStorage.getItem("pendingScan");
     if (raw) {
-      try { setPendingScan(JSON.parse(raw)); } catch { /* ignore */ }
-      localStorage.removeItem("pendingScan");
+      try {
+        const parsed: PendingScan = JSON.parse(raw);
+        setPendingScan(parsed);
+        localStorage.removeItem("pendingScan");
+        supabase.from("scans").insert({
+          user_id: user.id,
+          domain: parsed.domain,
+          readiness_score: parsed.readiness,
+          authority_score: parsed.authority,
+          influence_score: parsed.influence,
+          insight: parsed.insight,
+        }).then(() => {});
+      } catch { /* ignore */ }
+    } else {
+      supabase
+        .from("scans")
+        .select("domain, readiness_score, authority_score, influence_score, insight")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setPendingScan({
+              domain: data.domain as string,
+              readiness: data.readiness_score as number | null,
+              authority: data.authority_score as number | null,
+              influence: data.influence_score as number | null,
+              insight: data.insight as PendingScan["insight"],
+            });
+          }
+        });
     }
-  }, []);
+  }, [user]);
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
