@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { generateReport } from "@/lib/generateReport";
 
 interface PendingScan {
   domain: string;
@@ -584,6 +585,7 @@ export default function Dashboard() {
   const [sector, setSector] = useState<string | null | undefined>(undefined);
   const [showSectorModal, setShowSectorModal] = useState(false);
   const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -684,6 +686,26 @@ export default function Dashboard() {
   function handleScanSubmit(domain: string) {
     setShowScan(false);
     router.push(`/score?domain=${encodeURIComponent(domain)}`);
+  }
+
+  async function handleDownloadReport() {
+    if (!pendingScan || generating) return;
+    setGenerating(true);
+    try {
+      const sectorLabelValue = sector && SECTOR_AGENTS[sector] ? SECTOR_AGENTS[sector].label : null;
+      const checklistValue = sector ? (SECTOR_CHECKLIST[sector] ?? null) : null;
+      await generateReport({
+        domain: pendingScan.domain,
+        readiness: pendingScan.readiness ?? 0,
+        authority: pendingScan.authority,
+        influence: pendingScan.influence,
+        insight: pendingScan.insight,
+        sectorLabel: sectorLabelValue,
+        checklist: checklistValue,
+      });
+    } finally {
+      setGenerating(false);
+    }
   }
 
   if (loading) {
@@ -851,24 +873,38 @@ export default function Dashboard() {
           <div style={{ display: "flex", gap: 10 }}>
             {hasScan && (
               <button
-                onClick={() => window.open("/api/report", "_blank")}
+                onClick={handleDownloadReport}
+                disabled={generating}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "10px 18px", borderRadius: 10,
-                  background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600,
-                  border: "1px solid #E5E7EB", cursor: "pointer",
+                  background: "#fff", color: generating ? "#9CA3AF" : "#374151",
+                  fontSize: 13, fontWeight: 600,
+                  border: "1px solid #E5E7EB",
+                  cursor: generating ? "wait" : "pointer",
                   fontFamily: "var(--font-geist-sans)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                  opacity: generating ? 0.7 : 1,
+                  transition: "opacity 150ms",
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                  <polyline points="10 9 9 9 8 9" />
-                </svg>
-                Download Report
+                {generating ? (
+                  <>
+                    <div className="spin" style={{ width: 12, height: 12, borderRadius: "50%", border: "1.5px solid #E5E7EB", borderTopColor: "#9CA3AF", flexShrink: 0 }} />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    Download Report
+                  </>
+                )}
               </button>
             )}
             <button
