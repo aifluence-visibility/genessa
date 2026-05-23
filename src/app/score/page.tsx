@@ -47,38 +47,55 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
   const [emailInput, setEmailInput] = useState("");
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  // undefined = still fetching, null = no sector / logged out, string = sector set
+  const [sector, setSector] = useState<string | null | undefined>(undefined);
 
+  // Fetch sector from Supabase (if logged in)
   useEffect(() => {
     let cancelled = false;
+    async function fetchSector() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: authData } = await supabase.auth.getUser();
+        if (!authData.user) { if (!cancelled) setSector(null); return; }
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("sector")
+          .eq("id", authData.user.id)
+          .maybeSingle();
+        if (!cancelled) setSector((profile?.sector as string | null) ?? null);
+      } catch {
+        if (!cancelled) setSector(null);
+      }
+    }
+    fetchSector();
+    return () => { cancelled = true; };
+  }, []);
 
+  // Audit fetch (no sector dependency)
+  useEffect(() => {
+    let cancelled = false;
     fetch(`/api/audit?url=${encodeURIComponent(rawUrl)}`)
       .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) {
-          setResult(data);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    fetch(`/api/insight?url=${encodeURIComponent(rawUrl)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelled) {
-          setInsight(data);
-          setInsightLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setInsightLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) { setResult(data); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [rawUrl]);
+
+  // Insight fetch — waits for sector to resolve, then POSTs with sector
+  useEffect(() => {
+    if (sector === undefined) return;
+    let cancelled = false;
+    fetch("/api/insight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: rawUrl, sector }),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (!cancelled) { setInsight(data); setInsightLoading(false); } })
+      .catch(() => { if (!cancelled) setInsightLoading(false); });
+    return () => { cancelled = true; };
+  }, [rawUrl, sector]);
 
   async function handleGetFullReport() {
     const scanData = {
