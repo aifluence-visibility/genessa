@@ -90,13 +90,16 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
     };
     localStorage.setItem("pendingScan", JSON.stringify(scanData));
 
-    const supabase = createSupabaseBrowserClient();
-    const { data } = await supabase.auth.getUser();
-
-    if (!data.user) {
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        router.push("/dashboard");
+      } else {
+        router.push("/auth/login?next=/dashboard");
+      }
+    } catch {
       router.push("/auth/login?next=/dashboard");
-    } else {
-      router.push("/dashboard");
     }
   }
 
