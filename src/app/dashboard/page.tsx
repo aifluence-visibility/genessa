@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { generateReport } from "@/lib/generateReport";
+import { canAccess, getPlanLabel, getPlanColor, PLAN_LIMITS, type Plan } from "@/lib/plan";
 
 interface PendingScan {
   domain: string;
@@ -666,6 +667,7 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditResult, setAuditResult] = useState<GrowthAuditResult | null>(null);
+  const [plan, setPlan] = useState<Plan>("free");
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -724,12 +726,14 @@ export default function Dashboard() {
     const supabase = createSupabaseBrowserClient();
     supabase
       .from("profiles")
-      .select("sector")
+      .select("sector, plan")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         const s = (data?.sector as string | null) ?? null;
+        const p = (data?.plan as Plan) ?? "free";
         setSector(s);
+        setPlan(p);
         if (s === null) setShowSectorModal(true);
       });
   }, [user]);
@@ -845,6 +849,12 @@ export default function Dashboard() {
   const criticalCount = issues.filter(i => i.status === "critical").length;
   const fixedCount    = issues.filter(i => i.status === "fixed").length;
   const passingCount  = issues.filter(i => i.status === "passing").length;
+
+  const lastScanDate = scanHistory.length > 0 ? new Date(scanHistory[0].created_at) : null;
+  const daysSinceLastScan = lastScanDate ? (Date.now() - lastScanDate.getTime()) / (1000 * 60 * 60 * 24) : null;
+  const scanIntervalDays = PLAN_LIMITS[plan].scanIntervalDays as number;
+  const canRescan = daysSinceLastScan === null || daysSinceLastScan >= scanIntervalDays;
+  const daysUntilRescan = !canRescan && daysSinceLastScan !== null ? Math.ceil(scanIntervalDays - daysSinceLastScan) : 0;
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#F8F9FC", color: "#111827", overflow: "hidden" }}>
@@ -967,25 +977,38 @@ export default function Dashboard() {
               {copy?.heroTitle ?? "Dashboard"}
             </h1>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "3px 10px", borderRadius: 20,
+              fontSize: 11, fontWeight: 600,
+              background: getPlanColor(plan) + "22",
+              color: getPlanColor(plan),
+              border: `1px solid ${getPlanColor(plan)}44`,
+            }}>
+              {getPlanLabel(plan)}
+            </span>
             {hasScan && (
               <button
-                onClick={handleDownloadReport}
-                disabled={generating}
+                onClick={canAccess(plan, "pdfExport") ? handleDownloadReport : undefined}
+                disabled={generating || !canAccess(plan, "pdfExport")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "10px 18px", borderRadius: 10,
-                  background: "#fff", color: generating ? "#9CA3AF" : "#374151",
+                  background: "#fff",
+                  color: generating || !canAccess(plan, "pdfExport") ? "#9CA3AF" : "#374151",
                   fontSize: 13, fontWeight: 600,
                   border: "1px solid #E5E7EB",
-                  cursor: generating ? "wait" : "pointer",
+                  cursor: generating ? "wait" : !canAccess(plan, "pdfExport") ? "not-allowed" : "pointer",
                   fontFamily: "var(--font-geist-sans)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                  opacity: generating ? 0.7 : 1,
+                  opacity: generating || !canAccess(plan, "pdfExport") ? 0.7 : 1,
                   transition: "opacity 150ms",
                 }}
               >
-                {generating ? (
+                {!canAccess(plan, "pdfExport") ? (
+                  "🔒 PDF Export — Premium"
+                ) : generating ? (
                   <>
                     <div className="spin" style={{ width: 12, height: 12, borderRadius: "50%", border: "1.5px solid #E5E7EB", borderTopColor: "#9CA3AF", flexShrink: 0 }} />
                     Generating…
@@ -1085,15 +1108,20 @@ export default function Dashboard() {
                 <span style={{ fontSize: 12, color: "#9CA3AF" }}>· Just scanned</span>
               </div>
               <button
-                onClick={() => setShowScan(true)}
+                onClick={canRescan ? () => setShowScan(true) : undefined}
+                disabled={!canRescan}
+                title={!canRescan ? `Sonraki tarama: ${daysUntilRescan} gün sonra` : undefined}
                 style={{
-                  fontSize: 12, fontWeight: 600, color: "#2952E3",
-                  background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
-                  borderRadius: 8, padding: "6px 16px", cursor: "pointer",
+                  fontSize: 12, fontWeight: 600,
+                  color: canRescan ? "#2952E3" : "#9CA3AF",
+                  background: canRescan ? "rgba(41,82,227,0.06)" : "#F3F4F6",
+                  border: `1px solid ${canRescan ? "rgba(41,82,227,0.15)" : "#E5E7EB"}`,
+                  borderRadius: 8, padding: "6px 16px",
+                  cursor: canRescan ? "pointer" : "not-allowed",
                   fontFamily: "var(--font-geist-sans)",
                 }}
               >
-                Rescan
+                {canRescan ? "Rescan" : `${daysUntilRescan} gün sonra`}
               </button>
             </div>
 
@@ -1207,7 +1235,8 @@ export default function Dashboard() {
                           const items = sectorChecklist.filter(c => c.priority === priority);
                           if (!items.length) return null;
                           const groupLabel = priority === "this_week" ? "🔥 Bu Hafta" : priority === "this_month" ? "📅 Bu Ay" : "🎯 Uzun Vade";
-                          const locked = priority !== "this_week";
+                          const isNonFreeGroup = priority !== "this_week";
+                          const isGated = isNonFreeGroup && !canAccess(plan, "checklistFull");
                           return (
                             <div key={priority}>
                               <div style={{
@@ -1217,9 +1246,27 @@ export default function Dashboard() {
                               }}>
                                 {groupLabel}
                               </div>
-                              {items.map(item => (
-                                <ChecklistItem key={item.label} done={false} label={item.label} points={item.points} locked={locked} />
-                              ))}
+                              <div style={{ position: "relative" }}>
+                                <div style={isGated ? { filter: "blur(3px)", pointerEvents: "none", opacity: 0.5 } : undefined}>
+                                  {items.map(item => (
+                                    <ChecklistItem key={item.label} done={false} label={item.label} points={item.points} locked={isGated} />
+                                  ))}
+                                </div>
+                                {isGated && (
+                                  <div style={{
+                                    position: "absolute", inset: 0,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                  }}>
+                                    <span style={{
+                                      fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999,
+                                      background: "#FEF9C3", border: "1px solid #FDE047", color: "#A16207",
+                                      letterSpacing: "0.06em",
+                                    }}>
+                                      🔒 Premium
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
@@ -1283,22 +1330,22 @@ export default function Dashboard() {
 
               <button
                 onClick={handleGrowthAudit}
-                disabled={auditLoading || !pendingScan?.domain}
+                disabled={auditLoading || !pendingScan?.domain || !canAccess(plan, "growthAudit")}
                 style={{
                   width: "100%",
                   padding: "10px 16px",
                   background: auditLoading ? "#374151" : "#1F2937",
-                  color: auditLoading ? "#9CA3AF" : "#F9FAFB",
+                  color: auditLoading || !canAccess(plan, "growthAudit") ? "#9CA3AF" : "#F9FAFB",
                   border: "1px solid #374151",
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 500,
-                  cursor: auditLoading ? "not-allowed" : "pointer",
+                  cursor: auditLoading || !canAccess(plan, "growthAudit") ? "not-allowed" : "pointer",
                   marginTop: 8,
                   fontFamily: "var(--font-geist-sans)",
                 }}
               >
-                {auditLoading ? "🔄 Analiz ediliyor... (15-30 sn)" : "🚀 Growth Audit Başlat"}
+                {!canAccess(plan, "growthAudit") ? "🔒 Growth Audit — Premium" : auditLoading ? "🔄 Analiz ediliyor... (15-30 sn)" : "🚀 Growth Audit Başlat"}
               </button>
 
               {auditResult && (
