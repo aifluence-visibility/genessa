@@ -206,6 +206,105 @@ function NavItem({ icon, label, active, onClick, href }: {
   return inner;
 }
 
+// ─── Sector data ───────────────────────────────────────────────────────────────
+const SECTOR_AGENTS: Record<string, { name: string; label: string }> = {
+  restaurant:  { name: "Savor",  label: "Restaurant" },
+  hospitality: { name: "Haven",  label: "Hospitality" },
+  clinic:      { name: "Vita",   label: "Medical" },
+  education:   { name: "Sage",   label: "Education" },
+  ecommerce:   { name: "Flux",   label: "Commerce" },
+  saas:        { name: "Nexus",  label: "SaaS" },
+  realestate:  { name: "Stone",  label: "Property" },
+  legal:       { name: "Vero",   label: "Legal" },
+  finance:     { name: "Calix",  label: "Finance" },
+  creator:     { name: "Lumen",  label: "Creator" },
+};
+
+const SECTORS = [
+  { key: "restaurant",  emoji: "🍽️", label: "Restaurant" },
+  { key: "hospitality", emoji: "🏨", label: "Hospitality" },
+  { key: "clinic",      emoji: "🏥", label: "Clinic" },
+  { key: "education",   emoji: "🎓", label: "Education" },
+  { key: "ecommerce",   emoji: "🛍️", label: "E-commerce" },
+  { key: "saas",        emoji: "💻", label: "SaaS" },
+  { key: "realestate",  emoji: "🏠", label: "Real Estate" },
+  { key: "legal",       emoji: "⚖️", label: "Legal" },
+  { key: "finance",     emoji: "💰", label: "Finance" },
+  { key: "creator",     emoji: "✨", label: "Creator" },
+];
+
+// ─── Sector modal ──────────────────────────────────────────────────────────────
+function SectorModal({ onClose, onSelect }: { onClose: () => void; onSelect: (sector: string) => Promise<void> }) {
+  const [saving, setSaving] = useState(false);
+
+  async function handleSelect(key: string) {
+    setSaving(true);
+    await onSelect(key);
+    setSaving(false);
+  }
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 300,
+      background: "rgba(17,24,39,0.45)",
+      backdropFilter: "blur(5px)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 20, padding: "36px 36px 28px",
+        width: "100%", maxWidth: 560,
+        boxShadow: "0 24px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06)",
+        border: "1px solid #E5E7EB",
+      }}>
+        <h2 style={{ fontSize: 21, fontWeight: 700, color: "#111827", margin: "0 0 6px", letterSpacing: "-0.025em" }}>
+          İşletmeniz hangi sektörde?
+        </h2>
+        <p style={{ fontSize: 14, color: "#6B7280", margin: "0 0 26px", lineHeight: 1.5 }}>
+          Sektörünüze özel AI analizi için seçin
+        </p>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginBottom: 22,
+          opacity: saving ? 0.5 : 1, transition: "opacity 150ms",
+        }}>
+          {SECTORS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => handleSelect(s.key)}
+              disabled={saving}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center",
+                padding: "14px 6px", borderRadius: 10,
+                background: "#F9FAFB", border: "1.5px solid #E5E7EB",
+                cursor: saving ? "wait" : "pointer", gap: 7,
+                fontFamily: "var(--font-geist-sans)",
+              }}
+            >
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{s.emoji}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", textAlign: "center", lineHeight: 1.3 }}>
+                {s.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <button
+            onClick={onClose}
+            disabled={saving}
+            style={{
+              fontSize: 13, color: "#9CA3AF", background: "none", border: "none",
+              cursor: "pointer", fontFamily: "var(--font-geist-sans)", padding: "4px 0",
+            }}
+          >
+            Daha sonra seç
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Scan modal ────────────────────────────────────────────────────────────────
 function ScanModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (domain: string) => void }) {
   const [domain, setDomain] = useState("");
@@ -313,6 +412,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [pendingScan, setPendingScan] = useState<PendingScan | null>(null);
   const [showScan, setShowScan] = useState(false);
+  const [sector, setSector] = useState<string | null | undefined>(undefined);
+  const [showSectorModal, setShowSectorModal] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -366,6 +467,30 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("profiles")
+      .select("sector")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const s = (data?.sector as string | null) ?? null;
+        setSector(s);
+        if (s === null) setShowSectorModal(true);
+      });
+  }, [user]);
+
+  async function handleSectorSelect(selectedSector: string) {
+    const supabase = createSupabaseBrowserClient();
+    await supabase
+      .from("profiles")
+      .upsert({ id: user!.id, sector: selectedSector }, { onConflict: "id" });
+    setSector(selectedSector);
+    setShowSectorModal(false);
+  }
+
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -418,6 +543,14 @@ export default function Dashboard() {
       {/* ── Scan modal ── */}
       {showScan && <ScanModal onClose={() => setShowScan(false)} onSubmit={handleScanSubmit} />}
 
+      {/* ── Sector modal ── */}
+      {showSectorModal && (
+        <SectorModal
+          onClose={() => setShowSectorModal(false)}
+          onSelect={handleSectorSelect}
+        />
+      )}
+
       {/* ── Sidebar ── */}
       <aside style={{
         width: 224, flexShrink: 0,
@@ -468,7 +601,14 @@ export default function Dashboard() {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>General Agent</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+                {sector && SECTOR_AGENTS[sector] ? `${SECTOR_AGENTS[sector].name} Agent` : "General Agent"}
+              </div>
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1, lineHeight: 1.3 }}>
+                {sector && SECTOR_AGENTS[sector]
+                  ? `${SECTOR_AGENTS[sector].label} Intelligence Operator`
+                  : "Multi-sector analysis"}
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3 }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#16A34A", animation: "pulse-dot 2.5s ease infinite" }} />
                 <span style={{ fontSize: 10, fontWeight: 600, color: "#16A34A" }}>Active</span>
