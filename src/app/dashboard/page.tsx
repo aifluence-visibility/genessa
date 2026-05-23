@@ -19,6 +19,13 @@ interface PendingScan {
   } | null;
 }
 
+interface ScanRecord {
+  id: string;
+  domain: string;
+  readiness_score: number | null;
+  created_at: string;
+}
+
 // ─── Animated counter ──────────────────────────────────────────────────────────
 function useCounter(target: number | null, duration = 1400) {
   const [count, setCount] = useState(0);
@@ -338,6 +345,63 @@ const SECTORS = [
   { key: "marketing",   emoji: "📢", label: "Marketing Agency" },
 ];
 
+// ─── Trend chart ───────────────────────────────────────────────────────────────
+function fmtDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
+function TrendChart({ scans }: { scans: ScanRecord[] }) {
+  const pts_raw = [...scans].slice(0, 5).reverse();
+  const VW = 500, VH = 130;
+  const padL = 32, padR = 12, padT = 28, padB = 32;
+  const cW = VW - padL - padR;
+  const cH = VH - padT - padB;
+  const n = pts_raw.length;
+
+  const pts = pts_raw.map((s, i) => {
+    const x = n <= 1 ? padL + cW / 2 : padL + (i / (n - 1)) * cW;
+    const score = s.readiness_score ?? 0;
+    const y = padT + (1 - score / 100) * cH;
+    return { x, y, score, date: s.created_at };
+  });
+
+  const polylineStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: "block" }}>
+      <defs>
+        <linearGradient id="trendLine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#2952E3" />
+          <stop offset="100%" stopColor="#7B3FE4" />
+        </linearGradient>
+      </defs>
+      {[25, 50, 75].map(v => {
+        const y = padT + (1 - v / 100) * cH;
+        return (
+          <g key={v}>
+            <line x1={padL} y1={y} x2={VW - padR} y2={y} stroke="#F3F4F6" strokeWidth="1" />
+            <text x={padL - 4} y={y + 3.5} fontSize="8" fill="#D1D5DB" textAnchor="end">{v}</text>
+          </g>
+        );
+      })}
+      {n > 1 && (
+        <polyline points={polylineStr} fill="none" stroke="url(#trendLine)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      )}
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={4} fill="#fff" stroke="#2952E3" strokeWidth="2" />
+          <text x={p.x} y={p.y - 9} fontSize="10" fontWeight="700" fill="#2952E3" textAnchor="middle">{p.score}</text>
+          <text x={p.x} y={VH - 4} fontSize="9" fill="#9CA3AF" textAnchor="middle">{fmtDate(p.date)}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 // ─── Sector modal ──────────────────────────────────────────────────────────────
 function SectorModal({ onClose, onSelect }: { onClose: () => void; onSelect: (sector: string) => Promise<void> }) {
   const [saving, setSaving] = useState(false);
@@ -519,6 +583,7 @@ export default function Dashboard() {
   const [showScan, setShowScan] = useState(false);
   const [sector, setSector] = useState<string | null | undefined>(undefined);
   const [showSectorModal, setShowSectorModal] = useState(false);
+  const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -584,6 +649,20 @@ export default function Dashboard() {
         const s = (data?.sector as string | null) ?? null;
         setSector(s);
         if (s === null) setShowSectorModal(true);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("scans")
+      .select("id, domain, readiness_score, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (data) setScanHistory(data as ScanRecord[]);
       });
   }, [user]);
 
@@ -861,6 +940,27 @@ export default function Dashboard() {
               </button>
             </div>
 
+            {/* Score Trend */}
+            <section style={{
+              borderRadius: 16, padding: "20px 24px",
+              background: "#fff", border: "1px solid #E5E7EB",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            }}>
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Score Trend</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Readiness score over time</div>
+              </div>
+              {scanHistory.length < 2 ? (
+                <div style={{ padding: "20px 0", textAlign: "center" }}>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0, lineHeight: 1.6 }}>
+                    Rescan after making improvements to see your trend.
+                  </p>
+                </div>
+              ) : (
+                <TrendChart scans={scanHistory} />
+              )}
+            </section>
+
             {/* ── Middle: AI Insight + Checklist/Issues ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 292px", gap: 14, alignItems: "start" }}>
 
@@ -1039,6 +1139,46 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </section>
+
+            {/* Scan History */}
+            {scanHistory.length > 0 && (
+              <section style={{
+                borderRadius: 16, border: "1px solid #E5E7EB", overflow: "hidden",
+                background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              }}>
+                <div style={{ padding: "16px 24px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFA" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Scan History</div>
+                </div>
+                {scanHistory.slice(0, 5).map((scan, i) => (
+                  <div key={scan.id} style={{
+                    display: "flex", alignItems: "center",
+                    padding: "12px 24px",
+                    borderBottom: i < Math.min(scanHistory.length, 5) - 1 ? "1px solid #F9FAFB" : "none",
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {scan.domain}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{fmtDate(scan.created_at)}</div>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "#2952E3", letterSpacing: "-0.03em", margin: "0 20px", fontFamily: "var(--font-geist-sans)" }}>
+                      {scan.readiness_score ?? "—"}
+                    </div>
+                    <button
+                      onClick={() => router.push(`/score?domain=${encodeURIComponent(scan.domain)}`)}
+                      style={{
+                        fontSize: 12, fontWeight: 600, color: "#2952E3",
+                        background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
+                        borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+                        fontFamily: "var(--font-geist-sans)", whiteSpace: "nowrap",
+                      }}
+                    >
+                      View →
+                    </button>
+                  </div>
+                ))}
+              </section>
+            )}
 
           </div>
         )}
