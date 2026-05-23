@@ -37,7 +37,7 @@ const plans = [
     audience: "For anyone who wants a quick AI health check.",
     features: [
       { icon: "check", text: "1 domain" },
-      { icon: "check", text: "1 scan every 7 days" },
+      { icon: "check", text: "1 scan per month" },
       { icon: "check", text: "AI Readiness Score (all 9 checks)" },
       { icon: "partial", text: "AI Authority Score (number only)" },
       { icon: "lock", text: "AI Influence Score (locked)" },
@@ -56,7 +56,7 @@ const plans = [
     audience: "For founders & marketers serious about AI visibility.",
     features: [
       { icon: "check", text: "1 domain" },
-      { icon: "check", text: "Unlimited scans" },
+      { icon: "check", text: "4 scans per week" },
       { icon: "check", text: "AI Readiness Score (full)" },
       { icon: "check", text: "AI Authority Score (full detail)" },
       { icon: "lock", text: "AI Influence Score (locked)" },
@@ -105,18 +105,18 @@ function FeatureIcon({ icon, grad }: { icon: string; grad?: boolean }) {
 type CellValue = string | { text: string; muted?: boolean };
 
 const tableRows: { label: string; free: CellValue; starter: CellValue; pro: CellValue }[] = [
-  { label: "AI Readiness Score", free: "Full (9 checks)", starter: "Full (9 checks)", pro: "Full (9 checks)" },
-  { label: "AI Authority Score", free: { text: "Number only", muted: true }, starter: "Full detail", pro: "Full detail" },
-  { label: "AI Influence Score", free: { text: "Locked", muted: true }, starter: { text: "Locked", muted: true }, pro: "Full detail" },
-  { label: "Hero insight", free: "✓", starter: "✓", pro: "✓" },
-  { label: "Insight blocks", free: "2 / 6", starter: "6 / 6", pro: "6 / 6" },
-  { label: "Authority narrative", free: "—", starter: "✓", pro: "✓" },
-  { label: "Scan limit", free: "1 per 7 days", starter: "Unlimited", pro: "Unlimited" },
-  { label: "Domains", free: "1", starter: "1", pro: "5" },
-  { label: "Action checklist", free: "First 3", starter: "All items", pro: "All items" },
-  { label: "AI mention tracking", free: "—", starter: "—", pro: "Weekly" },
-  { label: "PDF export", free: "—", starter: "—", pro: "✓" },
-  { label: "Competitor analysis", free: "—", starter: "—", pro: { text: "Coming soon", muted: true } },
+  { label: "Domains",              free: "1",                               starter: "1",                               pro: "1"                                        },
+  { label: "Scan limit",           free: "1 per month",                     starter: "4 per week",                      pro: "4 per week"                               },
+  { label: "AI Readiness Score",   free: "✓",                               starter: "Full detail",                     pro: "Full detail"                              },
+  { label: "AI Authority Score",   free: { text: "Number only", muted: true }, starter: "Full detail",                  pro: "Full detail"                              },
+  { label: "AI Influence Score",   free: { text: "Locked", muted: true },   starter: { text: "Locked", muted: true },   pro: "✓"                                        },
+  { label: "AI mention tracking",  free: "—",                               starter: "—",                               pro: "Weekly"                                   },
+  { label: "Insight blocks",       free: "2 / 6",                           starter: "6 / 6",                           pro: "6 / 6"                                    },
+  { label: "Action checklist",     free: "First 3",                         starter: "All items",                       pro: "All items"                                },
+  { label: "Scan history",         free: "—",                               starter: "✓",                               pro: "✓"                                        },
+  { label: "PDF export",           free: "—",                               starter: "—",                               pro: "✓"                                        },
+  { label: "Competitor analysis",  free: "—",                               starter: "—",                               pro: { text: "Coming soon", muted: true }        },
+  { label: "Weekly email",         free: "—",                               starter: "✓",                               pro: "✓"                                        },
 ];
 
 function TableCell({ value, highlight }: { value: CellValue; highlight?: boolean }) {
@@ -232,6 +232,64 @@ export default function Pricing() {
               </Link>
             </div>
           ))}
+        </div>
+
+        {/* Partner cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ marginBottom: 80 }}>
+          {/* Agency Partner */}
+          <div style={{
+            borderRadius: 14, padding: "22px 22px 22px 28px",
+            background: "var(--bg-subtle)", border: "1px solid var(--border)",
+            position: "relative", overflow: "hidden",
+            display: "flex", flexDirection: "column", gap: 8,
+          }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "var(--genessa-gradient)" }} />
+            <div style={{ fontSize: 10, color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Agency</div>
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.02em", color: "var(--fg)" }}>Agency Partner</h3>
+            <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
+              Add AI visibility power to your agency. Become a partner.
+            </p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: 0 }}>5+ clients · Custom dashboard · Custom pricing</p>
+            <Link
+              href="/partner#agency"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                marginTop: 6, padding: "8px 16px", borderRadius: 8, width: "fit-content",
+                background: "var(--bg)", border: "1px solid var(--border-strong)",
+                fontSize: 13, fontWeight: 500, color: "var(--fg)", textDecoration: "none",
+              }}
+            >
+              Get in touch →
+            </Link>
+          </div>
+
+          {/* AI Visibility Program */}
+          <div style={{
+            borderRadius: 14, padding: "22px 22px 22px 28px",
+            background: "var(--bg-subtle)", border: "1px solid var(--border)",
+            position: "relative", overflow: "hidden",
+            display: "flex", flexDirection: "column", gap: 8,
+          }}>
+            <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "var(--genessa-gradient)" }} />
+            <div style={{ fontSize: 10, color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Program</div>
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.02em", color: "var(--fg)" }}>AI Visibility Program</h3>
+            <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
+              Make a difference in 3 months with an AI consultant built for your industry.
+            </p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: 0 }}>Sector-specific · 3 / 6 / 12 months · Weekly action steps</p>
+            <Link
+              href="/partner#program"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                marginTop: 6, padding: "8px 16px", borderRadius: 8, width: "fit-content",
+                background: "var(--genessa-gradient)", border: "none",
+                fontSize: 13, fontWeight: 500, color: "#fff", textDecoration: "none",
+                boxShadow: "var(--shadow-glow)",
+              }}
+            >
+              Explore the program →
+            </Link>
+          </div>
         </div>
 
         {/* SECTION 2 — Comparison table */}
