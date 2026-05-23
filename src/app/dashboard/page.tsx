@@ -239,96 +239,92 @@ const SECTOR_AGENTS: Record<string, { name: string; label: string }> = {
   marketing:   { name: "Jan",    label: "Marketing" },
 };
 
-type ChecklistEntry = { label: string; points: number };
+type ChecklistEntry = {
+  label: string;
+  priority: "this_week" | "this_month" | "long_term";
+  points: number;
+};
 
 const SECTOR_CHECKLIST: Record<string, ChecklistEntry[]> = {
   restaurant: [
-    { label: "Optimize Google Business Profile",    points: 15 },
-    { label: "Add Restaurant schema",               points: 12 },
-    { label: "Update TripAdvisor profile",          points: 10 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Index menu as HTML",                  points:  8 },
-    { label: "Set up review response system",       points:  8 },
-  ],
-  hospitality: [
-    { label: "Optimize Google Business Profile",    points: 15 },
-    { label: "Add LodgingBusiness schema",          points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Optimize OTA profiles",               points: 10 },
-    { label: "Create experience pages",             points:  8 },
-    { label: "Respond to guest reviews",            points:  8 },
+    { label: "Google Business Profile'ı optimize et",        priority: "this_week",   points: 15 },
+    { label: "Menüyü schema.org/Menu ile işaretle",           priority: "this_week",   points: 12 },
+    { label: "llms.txt dosyası ekle",                         priority: "this_week",   points: 10 },
+    { label: "TripAdvisor ve Yelp profillerini güncelle",     priority: "this_month",  points: 10 },
+    { label: "Rezervasyon linkini structured data'ya ekle",   priority: "this_month",  points:  8 },
+    { label: "Müşteri yorumlarına düzenli yanıt ver",         priority: "this_month",  points:  8 },
+    { label: "Yerel mutfak içeriği blog yazıları yaz",        priority: "long_term",   points:  6 },
+    { label: "Rakip mention analizi yap",                     priority: "long_term",   points:  5 },
   ],
   clinic: [
-    { label: "Add MedicalClinic schema",            points: 15 },
-    { label: "Create doctor profile pages",         points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Set up Trustpilot profile",           points: 10 },
-    { label: "Add multilingual content",            points:  8 },
-    { label: "Add accreditation certificates",      points:  8 },
-  ],
-  education: [
-    { label: "Add EducationalOrganization schema",  points: 15 },
-    { label: "Optimize program pages",              points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Add accreditation markup",            points: 10 },
-    { label: "Write international student guide",   points:  8 },
-    { label: "Create academic staff profiles",      points:  8 },
-  ],
-  ecommerce: [
-    { label: "Add Product schema to every product", points: 15 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Activate Google Shopping feed",       points: 10 },
-    { label: "Set up Trustpilot profile",           points: 10 },
-    { label: "Write buyer guides",                  points:  8 },
-    { label: "Build Reddit/Quora presence",         points:  8 },
+    { label: "MedicalOrganization schema ekle",                        priority: "this_week",   points: 15 },
+    { label: "Doktor profillerini Person schema ile işaretle",          priority: "this_week",   points: 12 },
+    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
+    { label: "Hasta yorumları için yapılandırılmış süreç kur",          priority: "this_month",  points: 10 },
+    { label: "Hizmet sayfalarını FAQ schema ile zenginleştir",          priority: "this_month",  points:  8 },
+    { label: "Sağlık içeriği için E-E-A-T sinyallerini güçlendir",     priority: "this_month",  points:  8 },
+    { label: "Medikal authority makaleleri yayımla",                    priority: "long_term",   points:  6 },
+    { label: "Diğer sağlık kurumlarından backlink al",                  priority: "long_term",   points:  5 },
   ],
   saas: [
-    { label: "Add SoftwareApplication schema",      points: 15 },
-    { label: "Make documentation AI-readable",      points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Optimize G2/Capterra profile",        points: 10 },
-    { label: "Create comparison pages",             points: 10 },
-    { label: "Set up GitHub presence",              points:  8 },
+    { label: "SoftwareApplication schema ekle",                        priority: "this_week",   points: 15 },
+    { label: "llms.txt ve ai.txt dosyaları ekle",                      priority: "this_week",   points: 12 },
+    { label: "Ürün karşılaştırma sayfası oluştur",                     priority: "this_week",   points: 10 },
+    { label: "G2 ve Capterra profillerini güncelle",                   priority: "this_month",  points: 10 },
+    { label: "API dokümantasyonunu AI'a okunur hale getir",            priority: "this_month",  points:  8 },
+    { label: "Use case sayfaları ekle (sektör bazlı)",                 priority: "this_month",  points:  8 },
+    { label: "Thought leadership blog yazıları yaz",                   priority: "long_term",   points:  6 },
+    { label: "Developer community varlığı oluştur",                    priority: "long_term",   points:  5 },
   ],
-  realestate: [
-    { label: "Add RealEstateAgent schema",          points: 15 },
-    { label: "Create agent profile pages",          points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Add multilingual content",            points: 10 },
-    { label: "Write neighbourhood guides",          points:  8 },
-    { label: "Optimize Google Business Profile",    points:  8 },
-  ],
-  legal: [
-    { label: "Add LegalService schema",             points: 15 },
-    { label: "Create attorney profile pages",       points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Add bar association markup",          points: 10 },
-    { label: "Add multilingual content",            points:  8 },
-    { label: "Write expat guide content",           points:  8 },
-  ],
-  finance: [
-    { label: "Add FinancialService schema",         points: 15 },
-    { label: "Make licence certificates visible",   points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Create advisor profile pages",        points: 10 },
-    { label: "Write educational content series",    points:  8 },
-    { label: "Set up Trustpilot profile",           points:  8 },
+  hotel: [
+    { label: "LodgingBusiness schema ekle",                            priority: "this_week",   points: 15 },
+    { label: "Oda tiplerini schema ile işaretle",                       priority: "this_week",   points: 12 },
+    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
+    { label: "Direkt rezervasyon CTA'sını öne çıkar",                  priority: "this_month",  points: 10 },
+    { label: "Booking.com ve TripAdvisor profillerini optimize et",    priority: "this_month",  points:  8 },
+    { label: "Deneyim içeriği sayfaları oluştur",                      priority: "this_month",  points:  8 },
+    { label: "Yerel etkinlik ve gezi rehberi içerikleri ekle",         priority: "long_term",   points:  6 },
+    { label: "Misafir hikayeleri ve UGC stratejisi kur",               priority: "long_term",   points:  5 },
   ],
   creator: [
-    { label: "Add Person schema",                   points: 15 },
-    { label: "Optimize LinkedIn profile",           points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Create Wikidata entry",               points: 10 },
-    { label: "Start thought leadership content",    points:  8 },
-    { label: "Plan podcast tour",                   points:  8 },
+    { label: "Person schema ekle (uzmanlık alanlarıyla)",              priority: "this_week",   points: 15 },
+    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 12 },
+    { label: "LinkedIn profilini AI okunabilir hale getir",            priority: "this_week",   points: 10 },
+    { label: "Medya görünümleri ve basın sayfası oluştur",             priority: "this_month",  points: 10 },
+    { label: "Uzmanlık alanı için FAQ sayfası yaz",                    priority: "this_month",  points:  8 },
+    { label: "Podcast ve röportaj geçmişini belgele",                  priority: "this_month",  points:  8 },
+    { label: "Düzenli thought leadership içerik takvimi kur",          priority: "long_term",   points:  6 },
+    { label: "Niche community'lerde aktif ol",                         priority: "long_term",   points:  5 },
   ],
-  marketing: [
-    { label: "Add ProfessionalService schema",      points: 15 },
-    { label: "Create Clutch profile",               points: 12 },
-    { label: "Create llms.txt",                     points: 10 },
-    { label: "Write case study pages",              points: 10 },
-    { label: "Start LinkedIn thought leadership",  points:  8 },
-    { label: "Add awards and accreditations",      points:  8 },
+  legal: [
+    { label: "LegalService schema ekle",                               priority: "this_week",   points: 15 },
+    { label: "Avukat profillerini Person schema ile işaretle",         priority: "this_week",   points: 12 },
+    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
+    { label: "Uzmanlık alanı hukuki rehber içerikleri yaz",           priority: "this_month",  points: 10 },
+    { label: "Avukat derneği profillerini güncelle",                   priority: "this_month",  points:  8 },
+    { label: "Müvekkil yorumları için yapı kur",                       priority: "this_month",  points:  8 },
+    { label: "Hukuki içerik authority sinyallerini güçlendir",        priority: "long_term",   points:  6 },
+    { label: "Akademik veya sektörel yayınlarda yer al",              priority: "long_term",   points:  5 },
+  ],
+  ecommerce: [
+    { label: "Product schema'yı tüm ürünlere ekle",                   priority: "this_week",   points: 15 },
+    { label: "llms.txt ve AI alışveriş sinyalleri ekle",              priority: "this_week",   points: 12 },
+    { label: "Ürün açıklamalarını AI okunabilir hale getir",          priority: "this_week",   points: 10 },
+    { label: "Google Merchant Center'ı güncelle",                      priority: "this_month",  points: 10 },
+    { label: "Kategori sayfalarına FAQ schema ekle",                   priority: "this_month",  points:  8 },
+    { label: "Müşteri yorumlarını structured data ile işaretle",      priority: "this_month",  points:  8 },
+    { label: "Ürün karşılaştırma sayfaları oluştur",                  priority: "long_term",   points:  6 },
+    { label: "Satın alma rehberi içerikleri yaz",                      priority: "long_term",   points:  5 },
+  ],
+  other: [
+    { label: "Organization schema ekle",                               priority: "this_week",   points: 15 },
+    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 12 },
+    { label: "Open Graph meta etiketlerini tamamla",                   priority: "this_week",   points: 10 },
+    { label: "FAQ schema ile içerikleri zenginleştir",                 priority: "this_month",  points: 10 },
+    { label: "Sayfa hız optimizasyonu yap",                            priority: "this_month",  points:  8 },
+    { label: "İçerik tazeliğini düzenli güncelle",                    priority: "this_month",  points:  8 },
+    { label: "Backlink profili geliştir",                              priority: "long_term",   points:  6 },
+    { label: "AI mention takip sistemi kur",                           priority: "long_term",   points:  5 },
   ],
 };
 
@@ -1171,10 +1167,30 @@ export default function Dashboard() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 3 }}>Quick Actions</div>
                   <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 14 }}>Fix these to improve your score</div>
                   {sectorChecklist
-                    ? sectorChecklist.map((item, i) => (
-                        <ChecklistItem key={item.label} done={false} label={item.label} points={item.points} locked={i >= 3} />
-                      ))
-                    : (
+                    ? (
+                      <>
+                        {(["this_week", "this_month", "long_term"] as const).map((priority, gi) => {
+                          const items = sectorChecklist.filter(c => c.priority === priority);
+                          if (!items.length) return null;
+                          const groupLabel = priority === "this_week" ? "🔥 Bu Hafta" : priority === "this_month" ? "📅 Bu Ay" : "🎯 Uzun Vade";
+                          const locked = priority !== "this_week";
+                          return (
+                            <div key={priority}>
+                              <div style={{
+                                fontSize: 11, fontWeight: 700, color: "#9CA3AF",
+                                textTransform: "uppercase", letterSpacing: "0.09em",
+                                marginTop: gi === 0 ? 0 : 12, marginBottom: 2,
+                              }}>
+                                {groupLabel}
+                              </div>
+                              {items.map(item => (
+                                <ChecklistItem key={item.label} done={false} label={item.label} points={item.points} locked={locked} />
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ) : (
                       <>
                         <ChecklistItem done={false} label="Add Organization schema"       points={15} />
                         <ChecklistItem done={false} label="Answer-first homepage content" points={15} />
