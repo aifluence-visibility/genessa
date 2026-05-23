@@ -156,9 +156,9 @@ function InsightRow({ icon, label, text, color, bgColor, borderColor }: {
 }
 
 // ─── Checklist item ────────────────────────────────────────────────────────────
-function ChecklistItem({ done, label, points }: { done: boolean; label: string; points: number }) {
+function ChecklistItem({ done, label, points, locked }: { done: boolean; label: string; points: number; locked?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: "1px solid #F9FAFB" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 0", borderBottom: "1px solid #F9FAFB", opacity: locked ? 0.65 : 1 }}>
       <div style={{
         width: 17, height: 17, borderRadius: 5, flexShrink: 0,
         border: done ? "none" : "1.5px solid #D1D5DB",
@@ -170,13 +170,23 @@ function ChecklistItem({ done, label, points }: { done: boolean; label: string; 
             <polyline points="20 6 9 17 4 12" />
           </svg>
         )}
+        {locked && !done && (
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        )}
       </div>
-      <span style={{ flex: 1, fontSize: 13, color: done ? "#9CA3AF" : "#374151", textDecoration: done ? "line-through" : "none" }}>
+      <span style={{ flex: 1, fontSize: 13, color: done || locked ? "#9CA3AF" : "#374151", textDecoration: done ? "line-through" : "none" }}>
         {label}
       </span>
-      {!done && (
+      {!done && !locked && (
         <span style={{ fontSize: 11, fontWeight: 600, color: "#2952E3", fontFamily: "var(--font-geist-mono)", whiteSpace: "nowrap" }}>
           +{points}
+        </span>
+      )}
+      {locked && (
+        <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: "#FEF9C3", border: "1px solid #FDE047", color: "#A16207", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+          PRO
         </span>
       )}
     </div>
@@ -219,6 +229,99 @@ const SECTOR_AGENTS: Record<string, { name: string; label: string }> = {
   finance:     { name: "Calix",  label: "Finance" },
   creator:     { name: "Lumen",  label: "Creator" },
   marketing:   { name: "Jan",    label: "Marketing" },
+};
+
+type ChecklistEntry = { label: string; points: number };
+
+const SECTOR_CHECKLIST: Record<string, ChecklistEntry[]> = {
+  restaurant: [
+    { label: "Google Business Profile optimize et", points: 15 },
+    { label: "Restaurant schema ekle",              points: 12 },
+    { label: "TripAdvisor profilini güncelle",       points: 10 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Menüyü HTML olarak indexle",           points:  8 },
+    { label: "Yorum yanıtlama sistemini kur",        points:  8 },
+  ],
+  hospitality: [
+    { label: "Google Business Profile optimize et", points: 15 },
+    { label: "LodgingBusiness schema ekle",         points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "OTA profillerini optimize et",        points: 10 },
+    { label: "Deneyim sayfaları oluştur",           points:  8 },
+    { label: "Misafir yorumlarına yanıt ver",       points:  8 },
+  ],
+  clinic: [
+    { label: "MedicalClinic schema ekle",           points: 15 },
+    { label: "Doktor profil sayfaları oluştur",     points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Trustpilot profili kur",              points: 10 },
+    { label: "Çok dilli içerik ekle",               points:  8 },
+    { label: "Akreditasyon sertifikaları ekle",     points:  8 },
+  ],
+  education: [
+    { label: "EducationalOrganization schema ekle", points: 15 },
+    { label: "Program sayfalarını optimize et",     points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Akreditasyon markup ekle",            points: 10 },
+    { label: "Uluslararası öğrenci rehberi yaz",   points:  8 },
+    { label: "Akademisyen profilleri oluştur",      points:  8 },
+  ],
+  ecommerce: [
+    { label: "Product schema her ürüne ekle",       points: 15 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Google Shopping feed aktif et",       points: 10 },
+    { label: "Trustpilot profili kur",              points: 10 },
+    { label: "Alıcı rehberleri yaz",                points:  8 },
+    { label: "Reddit/Quora varlığı oluştur",        points:  8 },
+  ],
+  saas: [
+    { label: "SoftwareApplication schema ekle",     points: 15 },
+    { label: "Documentation AI-readable yap",       points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "G2/Capterra profili optimize et",     points: 10 },
+    { label: "Karşılaştırma sayfaları oluştur",    points: 10 },
+    { label: "GitHub presence kur",                 points:  8 },
+  ],
+  realestate: [
+    { label: "RealEstateAgent schema ekle",         points: 15 },
+    { label: "Danışman profil sayfaları oluştur",  points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Çok dilli içerik ekle",               points: 10 },
+    { label: "Bölge rehberleri yaz",                points:  8 },
+    { label: "Google Business Profile optimize et", points:  8 },
+  ],
+  legal: [
+    { label: "LegalService schema ekle",            points: 15 },
+    { label: "Avukat profil sayfaları oluştur",     points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Baro akreditasyon markup ekle",       points: 10 },
+    { label: "Çok dilli içerik ekle",               points:  8 },
+    { label: "Expat rehber içerikleri yaz",         points:  8 },
+  ],
+  finance: [
+    { label: "FinancialService schema ekle",        points: 15 },
+    { label: "Lisans sertifikaları görünür yap",   points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Danışman profil sayfaları oluştur",  points: 10 },
+    { label: "Eğitici içerik serisi yaz",          points:  8 },
+    { label: "Trustpilot profili kur",              points:  8 },
+  ],
+  creator: [
+    { label: "Person schema ekle",                  points: 15 },
+    { label: "LinkedIn profili optimize et",        points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Wikidata kaydı oluştur",              points: 10 },
+    { label: "Thought leadership içerik başlat",   points:  8 },
+    { label: "Podcast tour planla",                 points:  8 },
+  ],
+  marketing: [
+    { label: "ProfessionalService schema ekle",     points: 15 },
+    { label: "Clutch profili oluştur",              points: 12 },
+    { label: "llms.txt oluştur",                    points: 10 },
+    { label: "Case study sayfaları yaz",            points: 10 },
+    { label: "LinkedIn thought leadership başlat", points:  8 },
+    { label: "Ödül ve akreditasyon ekle",          points:  8 },
+  ],
 };
 
 const SECTORS = [
@@ -518,17 +621,32 @@ export default function Dashboard() {
 
   const hasScan = pendingScan !== null;
 
-  const issues: { issue: string; status: "critical" | "fixed" | "passing" }[] = [
-    { issue: "Schema.org missing",       status: "critical" },
-    { issue: "Answer-first content low", status: "critical" },
-    { issue: "Entity links missing",     status: "critical" },
-    { issue: "llms.txt added",           status: "fixed"    },
-    { issue: "OG tags completed",        status: "fixed"    },
-    { issue: "Robots.txt configured",    status: "passing"  },
-    { issue: "HTTPS active",             status: "passing"  },
-    { issue: "Page speed acceptable",    status: "passing"  },
-    { issue: "Sitemap present",          status: "passing"  },
-  ];
+  const sectorChecklist = sector ? (SECTOR_CHECKLIST[sector] ?? null) : null;
+
+  type IssueStatus = "critical" | "fixed" | "passing" | "locked";
+  const issues: { issue: string; status: IssueStatus }[] = sectorChecklist
+    ? [
+        ...sectorChecklist.slice(0, 3).map(c => ({ issue: c.label, status: "critical" as IssueStatus })),
+        ...sectorChecklist.slice(3).map(c => ({ issue: c.label, status: "locked" as IssueStatus })),
+        { issue: "HTTPS active",           status: "passing" as IssueStatus },
+        { issue: "Sitemap present",        status: "passing" as IssueStatus },
+        { issue: "Robots.txt configured",  status: "passing" as IssueStatus },
+      ]
+    : [
+        { issue: "Schema.org missing",       status: "critical" as IssueStatus },
+        { issue: "Answer-first content low", status: "critical" as IssueStatus },
+        { issue: "Entity links missing",     status: "critical" as IssueStatus },
+        { issue: "llms.txt added",           status: "fixed"    as IssueStatus },
+        { issue: "OG tags completed",        status: "fixed"    as IssueStatus },
+        { issue: "Robots.txt configured",    status: "passing"  as IssueStatus },
+        { issue: "HTTPS active",             status: "passing"  as IssueStatus },
+        { issue: "Page speed acceptable",    status: "passing"  as IssueStatus },
+        { issue: "Sitemap present",          status: "passing"  as IssueStatus },
+      ];
+
+  const criticalCount = issues.filter(i => i.status === "critical").length;
+  const fixedCount    = issues.filter(i => i.status === "fixed").length;
+  const passingCount  = issues.filter(i => i.status === "passing").length;
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#F8F9FC", color: "#111827", overflow: "hidden" }}>
@@ -825,11 +943,19 @@ export default function Dashboard() {
                 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 3 }}>Quick Actions</div>
                   <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 14 }}>Fix these to improve your score</div>
-                  <ChecklistItem done={false} label="Add Organization schema"       points={15} />
-                  <ChecklistItem done={false} label="Answer-first homepage content" points={15} />
-                  <ChecklistItem done={false} label="article:published_time meta"   points={5} />
-                  <ChecklistItem done={true}  label="llms.txt in place"             points={0} />
-                  <ChecklistItem done={true}  label="Robots.txt allows AI bots"     points={0} />
+                  {sectorChecklist
+                    ? sectorChecklist.map((item, i) => (
+                        <ChecklistItem key={item.label} done={false} label={item.label} points={item.points} locked={i >= 3} />
+                      ))
+                    : (
+                      <>
+                        <ChecklistItem done={false} label="Add Organization schema"       points={15} />
+                        <ChecklistItem done={false} label="Answer-first homepage content" points={15} />
+                        <ChecklistItem done={false} label="article:published_time meta"   points={5} />
+                        <ChecklistItem done={true}  label="llms.txt in place"             points={0} />
+                        <ChecklistItem done={true}  label="Robots.txt allows AI bots"     points={0} />
+                      </>
+                    )}
                 </section>
 
                 {/* Issue summary */}
@@ -841,9 +967,9 @@ export default function Dashboard() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 16 }}>Issue Summary</div>
                   <div style={{ display: "flex" }}>
                     {[
-                      { count: 3, label: "Critical", color: "#DC2626", muted: "rgba(220,38,38,0.55)" },
-                      { count: 2, label: "Fixed",    color: "#16A34A", muted: "rgba(22,163,74,0.55)" },
-                      { count: 4, label: "Passing",  color: "#6B7280", muted: "#9CA3AF" },
+                      { count: criticalCount, label: "Critical", color: "#DC2626", muted: "rgba(220,38,38,0.55)" },
+                      { count: fixedCount,    label: "Fixed",    color: "#16A34A", muted: "rgba(22,163,74,0.55)" },
+                      { count: passingCount,  label: "Passing",  color: "#6B7280", muted: "#9CA3AF" },
                     ].map((item, i) => (
                       <div key={i} style={{ flex: 1, textAlign: "center", paddingRight: i < 2 ? 0 : undefined, borderRight: i < 2 ? "1px solid #F3F4F6" : "none" }}>
                         <div style={{ fontSize: 28, fontWeight: 700, color: item.color, letterSpacing: "-0.04em" }}>{item.count}</div>
@@ -879,15 +1005,15 @@ export default function Dashboard() {
                 <tbody>
                   {issues.map((row, i) => (
                     <tr key={i} style={{ borderBottom: "1px solid #F9FAFB" }}>
-                      <td style={{ padding: "12px 24px" }}>
+                      <td style={{ padding: "12px 24px", opacity: row.status === "locked" ? 0.55 : 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                           <span style={{
                             width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
-                            background: row.status === "critical" ? "#DC2626" : row.status === "fixed" ? "#16A34A" : "#D1D5DB",
+                            background: row.status === "critical" ? "#DC2626" : row.status === "fixed" ? "#16A34A" : row.status === "locked" ? "#D97706" : "#D1D5DB",
                           }} />
                           <span style={{
                             fontSize: 13,
-                            color: row.status === "fixed" ? "#9CA3AF" : "#374151",
+                            color: row.status === "fixed" || row.status === "locked" ? "#9CA3AF" : "#374151",
                             textDecoration: row.status === "fixed" ? "line-through" : "none",
                           }}>
                             {row.issue}
@@ -898,15 +1024,15 @@ export default function Dashboard() {
                         <span style={{
                           fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999,
                           textTransform: "uppercase", letterSpacing: "0.06em",
-                          background: row.status === "critical" ? "#FEF2F2" : row.status === "fixed" ? "#F0FDF4" : "#F3F4F6",
-                          color: row.status === "critical" ? "#DC2626" : row.status === "fixed" ? "#16A34A" : "#6B7280",
-                          border: `1px solid ${row.status === "critical" ? "#FECACA" : row.status === "fixed" ? "#BBF7D0" : "#E5E7EB"}`,
+                          background: row.status === "critical" ? "#FEF2F2" : row.status === "fixed" ? "#F0FDF4" : row.status === "locked" ? "#FEF9C3" : "#F3F4F6",
+                          color: row.status === "critical" ? "#DC2626" : row.status === "fixed" ? "#16A34A" : row.status === "locked" ? "#A16207" : "#6B7280",
+                          border: `1px solid ${row.status === "critical" ? "#FECACA" : row.status === "fixed" ? "#BBF7D0" : row.status === "locked" ? "#FDE047" : "#E5E7EB"}`,
                         }}>
-                          {row.status}
+                          {row.status === "locked" ? "PRO" : row.status}
                         </span>
                       </td>
                       <td style={{ padding: "12px 24px", textAlign: "right", fontSize: 11, color: "#9CA3AF", fontFamily: "var(--font-geist-mono)" }}>
-                        {row.status === "fixed" ? "Fixed" : "First scan"}
+                        {row.status === "fixed" ? "Fixed" : row.status === "locked" ? "—" : "First scan"}
                       </td>
                     </tr>
                   ))}
