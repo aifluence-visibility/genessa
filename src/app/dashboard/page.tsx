@@ -1115,6 +1115,22 @@ export default function Dashboard() {
             }}>
               {getPlanLabel(plan)}
             </span>
+            {plan === "agency" && (
+              <Link
+                href="/agency"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "6px 12px", borderRadius: 8,
+                  fontSize: 12, fontWeight: 600,
+                  background: "#FFFBEB",
+                  color: "#F59E0B",
+                  border: "1px solid #FDE68A",
+                  textDecoration: "none",
+                }}
+              >
+                Agency Panel →
+              </Link>
+            )}
             {hasScan && (
               <button
                 onClick={canAccess(plan, "pdfExport") ? handleDownloadReport : () => setUpgradeModal("PDF Export")}
