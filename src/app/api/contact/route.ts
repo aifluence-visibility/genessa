@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Genessa <noreply@genessa.io>",
+        from: "Genessa <onboarding@resend.dev>",
         to: [adminEmail],
         subject: `Contact: ${name} (${email})`,
         text: `Name: ${name}\nEmail: ${email}\n\n${message}`,

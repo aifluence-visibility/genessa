@@ -70,12 +70,6 @@ export function AdminSidebar({
         })}
       </nav>
 
-      <div className="border-t border-[var(--border)] p-3">
-        <div className="rounded-[var(--r-md)] bg-[var(--ink-50)] px-3 py-2 text-xs text-[var(--ink-600)]">
-          <p className="font-medium text-[var(--ink-800)]">Stage 1 foundation</p>
-          <p className="mt-1 leading-relaxed">Mock data only. Auth & API wiring comes later.</p>
-        </div>
-      </div>
     </aside>
   );
 }

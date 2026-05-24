@@ -49,6 +49,7 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   // undefined = still fetching, null = no sector / logged out, string = sector set
   const [sector, setSector] = useState<string | null | undefined>(undefined);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Fetch sector from Supabase (if logged in)
   useEffect(() => {
@@ -58,6 +59,7 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
         const supabase = createSupabaseBrowserClient();
         const { data: authData } = await supabase.auth.getUser();
         if (!authData.user) { if (!cancelled) setSector(null); return; }
+        if (!cancelled) setUserId(authData.user.id);
         const { data: profile } = await supabase
           .from("profiles")
           .select("sector")
@@ -71,6 +73,18 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
     fetchSector();
     return () => { cancelled = true; };
   }, []);
+
+  // Save scan + insight to Supabase when both are ready and user is logged in
+  useEffect(() => {
+    if (!result || !insight || !userId) return;
+    const supabase = createSupabaseBrowserClient();
+    supabase.from("scans").insert({
+      user_id: userId,
+      domain: rawUrl,
+      readiness_score: result.score,
+      insight,
+    }).then(() => {});
+  }, [result, insight, userId, rawUrl]);
 
   // Audit fetch (no sector dependency)
   useEffect(() => {

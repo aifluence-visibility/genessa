@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { Logo } from "./Logo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SECTOR_META, SECTOR_SLUGS } from "@/lib/sectorMeta";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function Nav() {
   const [open, setOpen] = useState(false);
   const [sectorsOpen, setSectorsOpen] = useState(false);
   const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setIsLoggedIn(!!data.user);
+    });
+  }, []);
 
   return (
     <nav className="w-full max-w-[1200px] mx-auto px-4 md:px-8 py-4 md:py-5 flex items-center justify-between relative">
@@ -83,7 +92,7 @@ export function Nav() {
       <div className="hidden md:flex items-center gap-3">
         <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>
         <Link href="/dashboard" className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>
-        <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>
+        {!isLoggedIn && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
         <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
           Get score
         </Link>
@@ -146,7 +155,7 @@ export function Nav() {
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
             <Link href="/agency" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>
             <Link href="/dashboard" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>
-            <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>
+            {!isLoggedIn && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
             <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
               Get score
             </Link>
