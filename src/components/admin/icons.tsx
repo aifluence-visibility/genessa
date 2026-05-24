@@ -203,6 +203,30 @@ export function AdminNavIconGlyph({
           />
         </svg>
       );
+    case "marketing":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M22 4L12 14.01l-4-4L2 15M22 4h-6M22 4v6"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "visibility":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+        </svg>
+      );
     default:
       return null;
   }
