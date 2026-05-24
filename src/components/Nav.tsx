@@ -10,13 +10,24 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [sectorsOpen, setSectorsOpen] = useState(false);
   const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    setMounted(true);
     const supabase = createSupabaseBrowserClient();
+
     supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(!!data.user);
+      setUser(data.user);
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
@@ -90,9 +101,9 @@ export function Nav() {
         <Link href="/" className="no-underline font-semibold" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
       </div>
       <div className="hidden md:flex items-center gap-3">
-        <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>
-        <Link href="/dashboard" className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>
-        {!isLoggedIn && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
+        {mounted && user && <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>}
+        {mounted && user && <Link href="/dashboard" className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>}
+        {mounted && !user && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
         <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
           Get score
         </Link>
@@ -153,9 +164,9 @@ export function Nav() {
           <Link href="/partner" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Partner</Link>
           <Link href="/" onClick={() => setOpen(false)} className="no-underline font-semibold text-sm" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
-            <Link href="/agency" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>
-            <Link href="/dashboard" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>
-            {!isLoggedIn && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
+            {mounted && user && <Link href="/agency" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>}
+            {mounted && user && <Link href="/dashboard" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>}
+            {mounted && !user && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
             <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
               Get score
             </Link>
