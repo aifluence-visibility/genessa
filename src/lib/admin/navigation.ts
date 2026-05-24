@@ -4,6 +4,9 @@ export type AdminNavIcon =
   | "revenue"
   | "activity"
   | "leads"
+  | "content"
+  | "emails"
+  | "pipeline"
   | "audits"
   | "proposals"
   | "sprints"
@@ -26,6 +29,9 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin/revenue", label: "Revenue", icon: "revenue" },
   { href: "/admin/activity", label: "Activity", icon: "activity" },
   { href: "/admin/leads", label: "Leads", icon: "leads" },
+  { href: "/admin/content", label: "Content", icon: "content" },
+  { href: "/admin/emails", label: "Emails", icon: "emails" },
+  { href: "/admin/pipeline", label: "Pipeline", icon: "pipeline" },
   { href: "/admin/audits", label: "Audits", icon: "audits" },
   { href: "/admin/proposals", label: "Proposals", icon: "proposals" },
   { href: "/admin/sprints", label: "Sprints", icon: "sprints" },

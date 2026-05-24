@@ -167,6 +167,42 @@ export function AdminNavIconGlyph({
           />
         </svg>
       );
+    case "content":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "emails":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "pipeline":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     default:
       return null;
   }
