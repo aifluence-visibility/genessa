@@ -554,6 +554,127 @@ function SectorModal({ onClose, onSelect }: { onClose: () => void; onSelect: (se
   );
 }
 
+// ─── Upgrade modal ─────────────────────────────────────────────────────────────
+type UpgradeModalProps = {
+  feature: string;
+  onClose: () => void;
+};
+
+function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
+  const whatsappMessage = encodeURIComponent(
+    `Merhaba, Genessa'da "${feature}" özelliğini kullanmak istiyorum. Premium plana geçmek hakkında bilgi alabilir miyim?`
+  );
+  const whatsappUrl = `https://wa.me/905XXXXXXXXX?text=${whatsappMessage}`;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.7)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "#111827",
+          border: "1px solid #1F2937",
+          borderRadius: 16,
+          padding: 32,
+          maxWidth: 420,
+          width: "100%",
+        }}
+      >
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "#F9FAFB", marginBottom: 8, margin: "0 0 8px" }}>
+            Premium Özellik
+          </h2>
+          <p style={{ fontSize: 14, color: "#9CA3AF", lineHeight: 1.6, margin: 0 }}>
+            <strong style={{ color: "#E5E7EB" }}>{feature}</strong> özelliği
+            Premium ve Agency planlarına dahildir.
+          </p>
+        </div>
+
+        {/* Plan comparison cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+          {/* Premium */}
+          <div style={{
+            background: "#1F2937", border: "1px solid #8B5CF6",
+            borderRadius: 12, padding: 16, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 11, color: "#8B5CF6", fontWeight: 600,
+                          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              Premium
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$19</div>
+            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/ay</div>
+            <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
+              ✓ Growth Audit<br/>
+              ✓ PDF Export<br/>
+              ✓ Tam checklist<br/>
+              ✓ 3 domain<br/>
+              ✓ Sınırsız scan
+            </div>
+          </div>
+          {/* Agency */}
+          <div style={{
+            background: "#1F2937", border: "1px solid #F59E0B",
+            borderRadius: 12, padding: 16, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 600,
+                          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              Agency
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$149</div>
+            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/ay</div>
+            <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
+              ✓ Her şey dahil<br/>
+              ✓ 10 domain<br/>
+              ✓ White-label<br/>
+              ✓ Agency panel<br/>
+              ✓ Öncelikli destek
+            </div>
+          </div>
+        </div>
+
+        {/* CTA buttons */}
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "block", width: "100%",
+            padding: "12px 0", borderRadius: 8,
+            background: "#25D366", color: "#fff",
+            fontWeight: 600, fontSize: 14,
+            textAlign: "center", textDecoration: "none",
+            marginBottom: 8,
+            boxSizing: "border-box",
+          }}
+        >
+          💬 WhatsApp ile İletişime Geç
+        </a>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%", padding: "10px 0", borderRadius: 8,
+            background: "transparent",
+            color: "#6B7280", fontWeight: 500, fontSize: 14,
+            border: "1px solid #374151", cursor: "pointer",
+            fontFamily: "var(--font-geist-sans)",
+          }}
+        >
+          Şimdi Değil
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Scan modal ────────────────────────────────────────────────────────────────
 function ScanModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (domain: string) => void }) {
   const [domain, setDomain] = useState("");
@@ -668,6 +789,7 @@ export default function Dashboard() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditResult, setAuditResult] = useState<GrowthAuditResult | null>(null);
   const [plan, setPlan] = useState<Plan>("free");
+  const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -879,6 +1001,11 @@ export default function Dashboard() {
         />
       )}
 
+      {/* ── Upgrade modal ── */}
+      {upgradeModal && (
+        <UpgradeModal feature={upgradeModal} onClose={() => setUpgradeModal(null)} />
+      )}
+
       {/* ── Sidebar ── */}
       <aside style={{
         width: 224, flexShrink: 0,
@@ -990,8 +1117,8 @@ export default function Dashboard() {
             </span>
             {hasScan && (
               <button
-                onClick={canAccess(plan, "pdfExport") ? handleDownloadReport : undefined}
-                disabled={generating || !canAccess(plan, "pdfExport")}
+                onClick={canAccess(plan, "pdfExport") ? handleDownloadReport : () => setUpgradeModal("PDF Export")}
+                disabled={generating}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "10px 18px", borderRadius: 10,
@@ -999,10 +1126,10 @@ export default function Dashboard() {
                   color: generating || !canAccess(plan, "pdfExport") ? "#9CA3AF" : "#374151",
                   fontSize: 13, fontWeight: 600,
                   border: "1px solid #E5E7EB",
-                  cursor: generating ? "wait" : !canAccess(plan, "pdfExport") ? "not-allowed" : "pointer",
+                  cursor: generating ? "wait" : "pointer",
                   fontFamily: "var(--font-geist-sans)",
                   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                  opacity: generating || !canAccess(plan, "pdfExport") ? 0.7 : 1,
+                  opacity: generating ? 0.7 : 1,
                   transition: "opacity 150ms",
                 }}
               >
@@ -1253,10 +1380,14 @@ export default function Dashboard() {
                                   ))}
                                 </div>
                                 {isGated && (
-                                  <div style={{
-                                    position: "absolute", inset: 0,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                  }}>
+                                  <div
+                                    onClick={() => setUpgradeModal("Tam Checklist")}
+                                    style={{
+                                      position: "absolute", inset: 0,
+                                      display: "flex", alignItems: "center", justifyContent: "center",
+                                      cursor: "pointer",
+                                    }}
+                                  >
                                     <span style={{
                                       fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 999,
                                       background: "#FEF9C3", border: "1px solid #FDE047", color: "#A16207",
@@ -1329,8 +1460,8 @@ export default function Dashboard() {
               </div>
 
               <button
-                onClick={handleGrowthAudit}
-                disabled={auditLoading || !pendingScan?.domain || !canAccess(plan, "growthAudit")}
+                onClick={!canAccess(plan, "growthAudit") ? () => setUpgradeModal("Growth Audit") : handleGrowthAudit}
+                disabled={auditLoading || !pendingScan?.domain}
                 style={{
                   width: "100%",
                   padding: "10px 16px",
@@ -1340,7 +1471,7 @@ export default function Dashboard() {
                   borderRadius: 8,
                   fontSize: 13,
                   fontWeight: 500,
-                  cursor: auditLoading || !canAccess(plan, "growthAudit") ? "not-allowed" : "pointer",
+                  cursor: auditLoading ? "not-allowed" : "pointer",
                   marginTop: 8,
                   fontFamily: "var(--font-geist-sans)",
                 }}
