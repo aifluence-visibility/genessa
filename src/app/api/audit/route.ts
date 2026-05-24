@@ -19,7 +19,7 @@ interface CachedScan {
 const scanCache = new Map<string, CachedScan>();
 const SCAN_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
-async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
+async function fetchWithTimeout(url: string, ms = 15000): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try {
@@ -30,22 +30,34 @@ async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
   }
 }
 
-async function fetchHTML(domain: string): Promise<string> {
+async function fetchHTML(domain: string): Promise<{ html: string; timedOut: boolean }> {
   try {
     const res = await fetchWithTimeout(`https://${domain}`);
-    return await res.text();
+    return { html: await res.text(), timedOut: false };
   } catch {
     try {
       const res = await fetchWithTimeout(`http://${domain}`);
-      return await res.text();
+      return { html: await res.text(), timedOut: false };
     } catch {
-      return "";
+      return { html: "", timedOut: true };
     }
   }
 }
 
-function checkSchema(html: string): CheckResult {
+function checkSchema(html: string, timedOut: boolean): CheckResult {
   const weight = 15;
+
+  if (timedOut) {
+    return {
+      name: "Schema.org",
+      status: "partial",
+      points: Math.round(weight * 0.5),
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Try scanning again later",
+    };
+  }
+
   const scripts = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
 
   if (scripts.length > 0) {
@@ -189,8 +201,20 @@ async function checkRobotsTxt(domain: string): Promise<CheckResult> {
   }
 }
 
-function checkOpenGraph(html: string): CheckResult {
+function checkOpenGraph(html: string, timedOut: boolean): CheckResult {
   const weight = 10;
+
+  if (timedOut) {
+    return {
+      name: "Open Graph",
+      status: "partial",
+      points: Math.round(weight * 0.5),
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Try scanning again later",
+    };
+  }
+
   const tags = ["og:title", "og:description", "og:image"];
   let found = 0;
   const missing: string[] = [];
@@ -228,8 +252,20 @@ function checkOpenGraph(html: string): CheckResult {
   };
 }
 
-function checkEntityLinks(html: string): CheckResult {
+function checkEntityLinks(html: string, timedOut: boolean): CheckResult {
   const weight = 5;
+
+  if (timedOut) {
+    return {
+      name: "Entity Links",
+      status: "partial",
+      points: Math.round(weight * 0.5),
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Try scanning again later",
+    };
+  }
+
   const wikidata = (html.match(/wikidata\.org/gi) || []).length;
   const wikipedia = (html.match(/wikipedia\.org/gi) || []).length;
   const total = wikidata + wikipedia;
@@ -257,8 +293,20 @@ function checkEntityLinks(html: string): CheckResult {
   };
 }
 
-function checkH1H2(html: string): CheckResult {
+function checkH1H2(html: string, timedOut: boolean): CheckResult {
   const weight = 10;
+
+  if (timedOut) {
+    return {
+      name: "H1/H2 Structure",
+      status: "partial",
+      points: Math.round(weight * 0.5),
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Try scanning again later",
+    };
+  }
+
   const h1s = (html.match(/<h1[\s>]/gi) || []).length;
   const h2s = (html.match(/<h2[\s>]/gi) || []).length;
 
@@ -282,8 +330,19 @@ function checkH1H2(html: string): CheckResult {
   return { name: "H1/H2 Structure", status: "fail", points: 0, weight, impact: "No H1 tag — AI bots cannot identify page topic", action: `Add H1 and H2 tags → +${weight} points` };
 }
 
-function checkFreshness(html: string): CheckResult {
+function checkFreshness(html: string, timedOut: boolean): CheckResult {
   const weight = 10;
+
+  if (timedOut) {
+    return {
+      name: "Freshness",
+      status: "fail",
+      points: 0,
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Improve server response time",
+    };
+  }
 
   const hasPublishedTime = /property=["']article:(?:published|modified)_time["']/i.test(html);
   const timeElements = (html.match(/<time[^>]+datetime=["'][^"']+["']/gi) || []).length;
@@ -306,7 +365,7 @@ async function checkSpeed(domain: string): Promise<CheckResult> {
   const weight = 15;
   const start = Date.now();
   try {
-    const res = await fetchWithTimeout(`https://${domain}`, 8000);
+    const res = await fetchWithTimeout(`https://${domain}`, 15000);
     const ms = Date.now() - start;
     if (!res.ok) {
       return { name: "Page Speed", status: "fail", points: 0, weight, impact: "HTTP error — AI bots cannot access the page", action: `Fix server errors → +${weight} points` };
@@ -324,8 +383,19 @@ async function checkSpeed(domain: string): Promise<CheckResult> {
   }
 }
 
-function checkAnswerFirst(html: string): CheckResult {
+function checkAnswerFirst(html: string, timedOut: boolean): CheckResult {
   const weight = 15;
+
+  if (timedOut) {
+    return {
+      name: "Answer-first",
+      status: "partial",
+      points: Math.round(weight * 0.5),
+      weight,
+      impact: "Could not check — site did not respond in time",
+      action: "Try scanning again later",
+    };
+  }
 
   const hasFaqSchema = /FAQPage/i.test(html);
   const hasHowToSchema = /HowTo/i.test(html);
@@ -369,19 +439,19 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const [html, llmsResult, robotsResult, speedResult] = await Promise.all([
+  const [{ html, timedOut }, llmsResult, robotsResult, speedResult] = await Promise.all([
     fetchHTML(domain),
     checkLlmsTxt(domain),
     checkRobotsTxt(domain),
     checkSpeed(domain),
   ]);
 
-  const schemaResult = checkSchema(html);
-  const ogResult = checkOpenGraph(html);
-  const entityResult = checkEntityLinks(html);
-  const h1h2Result = checkH1H2(html);
-  const freshnessResult = checkFreshness(html);
-  const answerFirstResult = checkAnswerFirst(html);
+  const schemaResult = checkSchema(html, timedOut);
+  const ogResult = checkOpenGraph(html, timedOut);
+  const entityResult = checkEntityLinks(html, timedOut);
+  const h1h2Result = checkH1H2(html, timedOut);
+  const freshnessResult = checkFreshness(html, timedOut);
+  const answerFirstResult = checkAnswerFirst(html, timedOut);
 
   const checks: CheckResult[] = [schemaResult, llmsResult, robotsResult, ogResult, entityResult, h1h2Result, freshnessResult, speedResult, answerFirstResult];
   const score = checks.reduce((sum, c) => sum + c.points, 0);
