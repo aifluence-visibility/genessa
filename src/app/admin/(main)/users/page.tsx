@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { Plan } from "@/lib/plan";
 import { getPlanColor, getPlanLabel } from "@/lib/plan";
 
@@ -160,7 +161,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-2.5 text-[var(--ink-600)]">{formatDate(u.created_at)}</td>
                     <td className="px-4 py-2.5 text-[var(--ink-600)]">{formatDate(u.lastScan)}</td>
                     <td className="px-4 py-2.5">
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         {PLANS.map((p) => {
                           const isActive = u.plan === p;
                           return (
@@ -185,6 +186,26 @@ export default function AdminUsersPage() {
                             </button>
                           );
                         })}
+                        {u.plan === "agency" && (
+                          <Link
+                            href={`/admin/agency-clients/${u.id}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                              padding: "4px 10px",
+                              borderRadius: 6,
+                              background: "#1F2937",
+                              color: "#F59E0B",
+                              fontSize: 12,
+                              fontWeight: 500,
+                              textDecoration: "none",
+                              border: "1px solid #374151",
+                            }}
+                          >
+                            👥 Clients
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
