@@ -564,7 +564,7 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
   const whatsappMessage = encodeURIComponent(
     `Merhaba, Genessa'da "${feature}" özelliğini kullanmak istiyorum. Premium plana geçmek hakkında bilgi alabilir miyim?`
   );
-  const whatsappUrl = `https://wa.me/905XXXXXXXXX?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/90525788737?text=${whatsappMessage}`;
 
   return (
     <div
