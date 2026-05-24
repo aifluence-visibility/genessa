@@ -51,7 +51,7 @@ export function Nav() {
             className="font-medium text-[var(--fg-2)] flex items-center gap-1 cursor-pointer"
             style={{ background: "none", border: "none", fontSize: "inherit", fontFamily: "inherit", padding: 0 }}
           >
-            Sektörler
+            Sectors
             <svg
               width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -64,12 +64,13 @@ export function Nav() {
           {sectorsOpen && (
             <div
               style={{
-                position: "absolute", top: "calc(100% + 8px)", left: "50%", transform: "translateX(-50%)",
+                position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
                 zIndex: 100,
                 background: "#111827", border: "1px solid #1F2937",
                 borderRadius: 8, minWidth: 220,
                 boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
                 padding: "4px 0",
+                paddingTop: 12,
               }}
             >
               {SECTOR_SLUGS.map((slug) => {
@@ -128,7 +129,7 @@ export function Nav() {
               className="font-medium text-sm text-[var(--fg-2)] flex items-center gap-1 w-full"
               style={{ background: "none", border: "none", fontFamily: "inherit", padding: 0, cursor: "pointer" }}
             >
-              Sektörler
+              Sectors
               <svg
                 width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
