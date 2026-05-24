@@ -11,9 +11,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Admin client not configured" }, { status: 500 });
   }
 
-  const [usersResult, profilesResult] = await Promise.all([
+  const [usersResult, profilesResult, scansResult] = await Promise.all([
     admin.auth.admin.listUsers({ perPage: 1000 }),
     admin.from("profiles").select("id, plan, sector, created_at"),
+    admin.from("scans").select("user_id, created_at").order("created_at", { ascending: false }),
   ]);
 
   const profiles = new Map(
@@ -22,12 +23,20 @@ export async function GET(req: Request) {
     )
   );
 
+  const lastScanMap = new Map<string, string>();
+  for (const scan of (scansResult.data ?? []) as { user_id: string; created_at: string }[]) {
+    if (!lastScanMap.has(scan.user_id)) {
+      lastScanMap.set(scan.user_id, scan.created_at);
+    }
+  }
+
   const users = (usersResult.data?.users ?? []).map((u) => ({
     id: u.id,
     email: u.email ?? "",
     plan: (profiles.get(u.id)?.plan ?? "free") as "free" | "premium" | "agency",
     sector: profiles.get(u.id)?.sector ?? null,
     created_at: u.created_at,
+    lastScan: lastScanMap.get(u.id) ?? null,
   }));
 
   return NextResponse.json({ users });

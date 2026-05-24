@@ -27,13 +27,20 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
       import("@/lib/admin/mock/dashboard"),
       import("@/lib/admin/mock/audits"),
     ]);
+    const mockExtra: DashboardStat[] = [
+      { label: "PREMIUM USERS", value: "0", hint: "Active paid accounts" },
+      { label: "TODAY'S SCANS", value: "0", hint: "Last 24 hours" },
+    ];
     return {
       source: "mock",
-      stats: dashboardStats,
+      stats: [...dashboardStats, ...mockExtra],
       recentActivity,
       auditsPreview: mockAudits.slice(0, 4),
     };
   }
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
 
   const [
     engagementsRes,
@@ -47,6 +54,8 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
     agentPendingRes,
     agentRunningRes,
     agentFinished24hRes,
+    paidUsersRes,
+    todayScansRes,
   ] = await Promise.all([
     supabase.from("engagements").select("client_account_id,metadata").eq("status", "active").is("deleted_at", null),
     supabase.from("approval_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -87,6 +96,14 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
       .select("id", { count: "exact", head: true })
       .in("status", ["succeeded", "failed", "cancelled"])
       .gte("finished_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .in("plan", ["premium", "agency"]),
+    supabase
+      .from("scans")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", todayStart.toISOString()),
   ]);
 
   const engagementRows = engagementsRes.data ?? [];
@@ -143,6 +160,8 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
   const agentPending = agentPendingRes.count ?? 0;
   const agentRunning = agentRunningRes.count ?? 0;
   const agentFinished24h = agentFinished24hRes.count ?? 0;
+  const paidUsers = paidUsersRes.count ?? 0;
+  const todayScans = todayScansRes.count ?? 0;
 
   const stats: DashboardStat[] = [
     { label: "Active clients", value: String(activeClientCount), hint: "Distinct clients with an active engagement" },
@@ -173,6 +192,8 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
       value: String(agentFinished24h),
       hint: "Succeeded / failed / cancelled with finished_at",
     },
+    { label: "PREMIUM USERS", value: String(paidUsers), hint: "Active paid accounts" },
+    { label: "TODAY'S SCANS", value: String(todayScans), hint: "Last 24 hours" },
   ];
 
   return { source: "database", stats, recentActivity, auditsPreview };

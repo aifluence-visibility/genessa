@@ -22,6 +22,30 @@ export function AdminNavIconGlyph({
           />
         </svg>
       );
+    case "users":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M17 20c0-2.21-2.24-4-5-4s-5 1.79-5 4M12 13a4 4 0 100-8 4 4 0 000 8zM21 20c0-1.87-1.56-3.45-3.75-3.9M17.5 7.13A4 4 0 0119 9.5a4 4 0 01-2.5 3.65"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "revenue":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+          <path
+            d="M12 7v10M9.5 9.5C9.5 8.4 10.6 8 12 8s2.5.4 2.5 1.5-1 1.5-2.5 2-2.5 1-2.5 2 1.1 1.5 2.5 1.5 2.5-.4 2.5-1.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
     case "activity":
       return (
         <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
