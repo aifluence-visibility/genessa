@@ -18,7 +18,7 @@ export async function generateMetadata({
   const meta = SECTOR_META[sector];
   if (!meta) return {};
   return {
-    title: `${meta.emoji} ${meta.name} için AI Görünürlük Analizi | Genessa`,
+    title: `${meta.emoji} ${meta.name} — AI Visibility Analysis | Genessa`,
     description: meta.subheadline,
   };
 }
@@ -62,7 +62,7 @@ export default async function SectorPage({
               }}
             >
               <span>{meta.emoji}</span>
-              <span>{meta.name} için Genessa</span>
+              <span>Genessa for {meta.name}</span>
             </div>
 
             {/* Headline */}
@@ -101,7 +101,7 @@ export default async function SectorPage({
               </Link>
             </div>
             <div className="mt-3 text-[13px] text-[var(--fg-3)]">
-              Ücretsiz · Kayıt gerekmez · 60 saniyede sonuç
+              Free · No signup required · Results in 60 seconds
             </div>
           </div>
         </section>
@@ -110,10 +110,10 @@ export default async function SectorPage({
         <section className="px-4 md:px-8 py-12 md:py-16 max-w-[900px] mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-[36px] font-medium tracking-[-0.03em] text-[var(--fg)] mb-3">
-              Bu sektöre özel ne analiz eder?
+              What does Genessa analyze for this sector?
             </h2>
             <p className="text-[var(--fg-2)] text-sm md:text-base max-w-[480px] mx-auto">
-              Genessa, {meta.name} işletmelerinin AI görünürlüğünü etkileyen sinyalleri ölçer.
+              Genessa measures the signals that impact AI visibility for {meta.name} businesses.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -148,7 +148,7 @@ export default async function SectorPage({
             }}
           >
             <p className="text-[13px] font-medium tracking-wide text-[#6B7280] uppercase mb-5" style={{ letterSpacing: "0.08em" }}>
-              Birisi şu an AI&apos;a şunu soruyor:
+              Someone is asking AI right now:
             </p>
             <blockquote
               className="text-[clamp(20px,4vw,32px)] font-medium italic leading-[1.3] mb-6"
@@ -160,7 +160,7 @@ export default async function SectorPage({
               &ldquo;{meta.exampleQuery}&rdquo;
             </blockquote>
             <p className="text-[15px] text-[#9CA3AF] mb-8">
-              Siz bu sorguda görünüyor musunuz?
+              Are you showing up for this query?
             </p>
             <Link
               href={`/?sector=${meta.slug}`}
@@ -188,7 +188,7 @@ export default async function SectorPage({
             {meta.ctaLabel} →
           </Link>
           <div className="mt-4 text-[13px] text-[var(--fg-3)]">
-            Ücretsiz • Kayıt gerekmez • 60 saniyede sonuç
+            Free • No signup required • Results in 60 seconds
           </div>
         </section>
 
