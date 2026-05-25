@@ -15,7 +15,7 @@ const SECTORS = [
   "Other",
 ];
 
-const CLIENT_COUNTS = ["1–4", "5–10", "11–25", "25+"];
+const ORG_TYPES = ["University", "Holding", "Franchise", "Multi-brand", "Other"];
 
 type AgentColor = { name: string; bg: string; border: string; text: string; tooltip: string };
 
@@ -218,7 +218,7 @@ export default function PartnerPage() {
   const [progForm, setProgForm] = useState({ name: "", email: "", sector: "", message: "" });
   const [progStatus, setProgStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const [agencyForm, setAgencyForm] = useState({ name: "", agency: "", clients: "", email: "", message: "" });
+  const [agencyForm, setAgencyForm] = useState({ name: "", company: "", orgType: "", entities: "", email: "", message: "" });
   const [agencyStatus, setAgencyStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   function scrollTo(id: string) {
@@ -248,7 +248,7 @@ export default function PartnerPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...agencyForm, type: "agency" }),
+        body: JSON.stringify({ ...agencyForm, type: "enterprise" }),
       });
       if (!res.ok) throw new Error();
       setAgencyStatus("sent");
@@ -338,10 +338,10 @@ export default function PartnerPage() {
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--fg)", marginBottom: 5 }}>
-                  Agency Partner
+                  Enterprise & Corporate Partner
                 </div>
                 <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
-                  AI visibility for all your clients under one dashboard built for agencies.
+                  Manage multiple brands, locations, or subsidiaries under one account. Built for holding companies, universities, and franchise networks.
                 </p>
               </div>
               <span style={{ fontSize: 13, fontWeight: 500, color: "var(--genessa-blue)" }}>Learn more →</span>
@@ -465,13 +465,12 @@ export default function PartnerPage() {
         {/* ── Section 2 — Agency Partner ── */}
         <section id="agency" style={{ scrollMarginTop: 80 }}>
           <div style={{ marginBottom: 40 }}>
-            <div className="eyebrow" style={{ marginBottom: 12 }}>Agency Partner</div>
+            <div className="eyebrow" style={{ marginBottom: 12 }}>Enterprise Partner</div>
             <h2 style={{ fontSize: "clamp(26px, 3vw, 36px)", fontWeight: 600, letterSpacing: "-0.03em", margin: "0 0 14px", lineHeight: 1.2 }}>
-              AI visibility<br />for your clients
+              Enterprise & Corporate<br />Partner
             </h2>
             <p style={{ fontSize: 15, color: "var(--fg-2)", lineHeight: 1.65, maxWidth: 560, margin: 0 }}>
-              Managing 5 or more clients? Become a Genessa Agency Partner and give your clients
-              their own AI visibility dashboard — under your brand, on your terms.
+              Manage multiple brands, locations, or subsidiaries under one account. Perfect for universities, holding companies, franchise networks, and multi-brand businesses.
             </p>
           </div>
 
@@ -485,16 +484,45 @@ export default function PartnerPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "12px 32px" }}>
               {[
-                "Manage all client domains in one dashboard",
-                "PDF reports ready to send to clients",
-                "Custom pricing negotiated per volume",
-                "Early access to new features and agents",
-                "Dedicated partner support channel",
+                "Up to 10 business entities under one account",
+                "Individual AI visibility scores per entity",
+                "Unified dashboard across all brands",
+                "PDF reports for each entity",
+                "Growth Audit for all entities",
+                "Dedicated support channel",
                 "White-label option available on request",
+                "Custom pricing negotiated per volume",
               ].map((item) => (
                 <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <CheckIcon />
                   <span style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Who is this for? */}
+          <div style={{
+            borderRadius: 16, padding: "28px 32px",
+            background: "var(--bg-subtle)", border: "1px solid var(--border)",
+            marginBottom: 40,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 20, fontFamily: "var(--font-geist-mono)" }}>
+              Who is this for?
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "12px 32px" }}>
+              {[
+                { emoji: "🎓", label: "Universities", desc: "main site + academy + online programs" },
+                { emoji: "🏢", label: "Holdings", desc: "manage all subsidiaries in one dashboard" },
+                { emoji: "🏪", label: "Franchises", desc: "track AI visibility across all locations" },
+                { emoji: "🌐", label: "Multi-brand", desc: "different brands, one control center" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{item.emoji}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55 }}>
+                    <strong style={{ color: "var(--fg)", fontWeight: 600 }}>{item.label}</strong>
+                    {" — "}{item.desc}
+                  </span>
                 </div>
               ))}
             </div>
@@ -506,7 +534,7 @@ export default function PartnerPage() {
             boxShadow: "var(--shadow-sm)",
           }}>
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg)", marginBottom: 6 }}>Apply for agency partnership</div>
+              <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--fg)", marginBottom: 6 }}>Apply for Enterprise Partnership</div>
               <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.5 }}>
                 We&apos;ll reach out within 24 hours to discuss a custom plan.
               </p>
@@ -517,13 +545,14 @@ export default function PartnerPage() {
               <form onSubmit={handleAgencySubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
                   <InputField label="Your name" value={agencyForm.name} onChange={(v) => setAgencyForm((f) => ({ ...f, name: v }))} placeholder="Full name" />
-                  <InputField label="Agency name" value={agencyForm.agency} onChange={(v) => setAgencyForm((f) => ({ ...f, agency: v }))} placeholder="Acme Digital" />
+                  <InputField label="Company / Organization name" value={agencyForm.company} onChange={(v) => setAgencyForm((f) => ({ ...f, company: v }))} placeholder="Acme Holdings" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
-                  <SelectField label="Number of clients" value={agencyForm.clients} onChange={(v) => setAgencyForm((f) => ({ ...f, clients: v }))} options={CLIENT_COUNTS} />
-                  <InputField label="Email" type="email" value={agencyForm.email} onChange={(v) => setAgencyForm((f) => ({ ...f, email: v }))} placeholder="you@agency.com" />
+                  <SelectField label="Type" value={agencyForm.orgType} onChange={(v) => setAgencyForm((f) => ({ ...f, orgType: v }))} options={ORG_TYPES} />
+                  <InputField label="Number of entities" value={agencyForm.entities} onChange={(v) => setAgencyForm((f) => ({ ...f, entities: v }))} placeholder="e.g. 5" />
                 </div>
-                <TextareaField label="Message" value={agencyForm.message} onChange={(v) => setAgencyForm((f) => ({ ...f, message: v }))} placeholder="Tell us about your agency and how you'd like to use Genessa…" />
+                <InputField label="Email" type="email" value={agencyForm.email} onChange={(v) => setAgencyForm((f) => ({ ...f, email: v }))} placeholder="you@company.com" />
+                <TextareaField label="Message" value={agencyForm.message} onChange={(v) => setAgencyForm((f) => ({ ...f, message: v }))} placeholder="Tell us about your organization…" />
                 {agencyStatus === "error" && (
                   <p style={{ fontSize: 13, color: "var(--score-bad)", margin: 0 }}>Something went wrong. Please try again.</p>
                 )}

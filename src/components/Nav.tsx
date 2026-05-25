@@ -102,7 +102,7 @@ export function Nav() {
         <Link href="/" className="no-underline font-semibold" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
       </div>
       <div className="hidden md:flex items-center gap-3">
-        {mounted && user && <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>}
+        {mounted && user && <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Enterprise</Link>}
         {mounted && user && <Link href="/dashboard" className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>}
         {mounted && !user && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
         <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">

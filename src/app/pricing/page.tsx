@@ -109,21 +109,22 @@ const plansData: PlanDef[] = [
     ctaKind: "secondary",
   },
   {
-    name: "Agency",
+    name: "Enterprise",
     monthlyPrice: "Custom",
     yearlyPrice: "Custom",
     yearlyNote: null,
     per: "pricing",
     popular: false,
-    audience: "For agencies managing multiple brands.",
+    audience: "For multi-brand businesses & organizations.",
     features: [
-      { icon: "check", text: "10 client domains" },
-      { icon: "check", text: "All Pro features" },
+      { icon: "check", text: "Up to 10 business entities" },
+      { icon: "check", text: "All Pro features per entity" },
+      { icon: "check", text: "Unified management dashboard" },
+      { icon: "check", text: "PDF reports for all entities" },
       { icon: "check", text: "White-label option" },
-      { icon: "check", text: "Client dashboard" },
-      { icon: "check", text: "Monthly/yearly billing for clients" },
+      { icon: "check", text: "Custom pricing" },
     ],
-    cta: { label: "Contact us", href: "/contact" },
+    cta: { label: "Contact us", href: "/partner" },
     ctaKind: "secondary",
   },
 ];
@@ -327,12 +328,12 @@ export default function Pricing() {
             display: "flex", flexDirection: "column", gap: 8,
           }}>
             <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "var(--genessa-gradient)" }} />
-            <div style={{ fontSize: 10, color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Agency</div>
-            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.02em", color: "var(--fg)" }}>Agency Partner</h3>
+            <div style={{ fontSize: 10, color: "var(--fg-3)", fontFamily: "var(--font-geist-mono)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Enterprise</div>
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.02em", color: "var(--fg)" }}>Enterprise Partner</h3>
             <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>
-              Add AI visibility power to your agency. Become a partner.
+              Manage multiple brands and subsidiaries under one account. Built for holdings, universities, and franchise networks.
             </p>
-            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: 0 }}>5+ clients · Custom dashboard · Custom pricing</p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: 0 }}>10 entities · Unified dashboard · Custom pricing</p>
             <Link
               href="/partner#agency"
               style={{
