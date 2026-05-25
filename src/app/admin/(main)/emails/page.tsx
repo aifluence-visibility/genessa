@@ -50,6 +50,16 @@ export default function EmailsPage() {
   const [history, setHistory] = useState<EmailSend[]>([]);
 
   useEffect(() => {
+    const draft = localStorage.getItem("email_draft");
+    if (draft) {
+      try {
+        const { subject: s, audience: a } = JSON.parse(draft);
+        if (s) setSubject(s);
+        if (a) setAudience(a);
+      } catch { /* ignore */ }
+      localStorage.removeItem("email_draft");
+    }
+
     supabase
       .from("email_sends")
       .select("id, subject, audience, recipient_count, sent_at")

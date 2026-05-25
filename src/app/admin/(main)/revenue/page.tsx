@@ -92,10 +92,10 @@ export default function AdminRevenuePage() {
   const totalRevenue = premiumRevenue + agencyRevenue;
 
   const kpiCards = [
-    { label: "FREE USERS", value: String(planDist.free), hint: "$0/ay" },
-    { label: "PREMIUM USERS", value: String(planDist.premium), hint: `$${premiumRevenue}/ay @ $${PRICES.premium}` },
-    { label: "AGENCY USERS", value: String(planDist.agency), hint: `$${agencyRevenue}/ay @ $${PRICES.agency}` },
-    { label: "TAHMİNİ GELİR", value: `$${totalRevenue}`, hint: "Toplam MRR/ay" },
+    { label: "FREE USERS", value: String(planDist.free), hint: "$0/mo" },
+    { label: "PREMIUM USERS", value: String(planDist.premium), hint: `$${premiumRevenue}/mo @ $${PRICES.premium}` },
+    { label: "AGENCY USERS", value: String(planDist.agency), hint: `$${agencyRevenue}/mo @ $${PRICES.agency}` },
+    { label: "ESTIMATED REVENUE", value: `$${totalRevenue}`, hint: "Total MRR/mo" },
   ];
 
   return (
@@ -125,12 +125,12 @@ export default function AdminRevenuePage() {
 
       {/* Payment Records Table */}
       <div>
-        <h2 className="mb-3 text-[15px] font-semibold text-[var(--ink-800)]">Manuel Ödeme Kayıtları</h2>
+        <h2 className="mb-3 text-[15px] font-semibold text-[var(--ink-800)]">Payment Records</h2>
         <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--ink-0)]">
           <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--ink-50)]">
-                {["Email", "Plan", "Tutar", "Tarih", "Not", "Sil"].map((h) => (
+                {["Email", "Plan", "Amount", "Date", "Note", ""].map((h) => (
                   <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-[var(--ink-600)]">
                     {h}
                   </th>
@@ -141,7 +141,7 @@ export default function AdminRevenuePage() {
               {records.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-5 text-sm text-[var(--ink-400)]">
-                    Henüz kayıt yok.
+                    No records yet.
                   </td>
                 </tr>
               ) : (
@@ -179,7 +179,7 @@ export default function AdminRevenuePage() {
                           cursor: "pointer",
                         }}
                       >
-                        Sil
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -192,7 +192,7 @@ export default function AdminRevenuePage() {
 
       {/* Add Payment Form */}
       <div>
-        <h2 className="mb-3 text-[15px] font-semibold text-[var(--ink-800)]">Yeni Ödeme Ekle</h2>
+        <h2 className="mb-3 text-[15px] font-semibold text-[var(--ink-800)]">Add Payment</h2>
         <div
           className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--ink-0)] p-5"
           style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "flex-end" }}
@@ -224,7 +224,7 @@ export default function AdminRevenuePage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Tutar ($)</label>
+            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Amount ($)</label>
             <input
               type="number"
               value={form.amount}
@@ -234,7 +234,7 @@ export default function AdminRevenuePage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Tarih</label>
+            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Date</label>
             <input
               type="date"
               value={form.date}
@@ -244,10 +244,10 @@ export default function AdminRevenuePage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Not (opsiyonel)</label>
+            <label style={{ fontSize: "12px", color: "var(--ink-500)", fontWeight: 500 }}>Note (optional)</label>
             <input
               type="text"
-              placeholder="Not ekle..."
+              placeholder="Add note..."
               value={form.note}
               onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
               style={{ ...inputStyle, width: "200px" }}
@@ -267,7 +267,7 @@ export default function AdminRevenuePage() {
               cursor: "pointer",
             }}
           >
-            Kaydet
+            Save
           </button>
         </div>
       </div>

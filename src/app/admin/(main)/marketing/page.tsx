@@ -13,6 +13,7 @@ const SECTORS = [
   { key: "ecommerce", label: "E-Commerce" },
   { key: "creator", label: "Creator" },
   { key: "legal", label: "Legal" },
+  { key: "marketing", label: "Marketing Agency" },
   { key: "other", label: "Other" },
 ];
 
