@@ -58,6 +58,8 @@ const PLAN_BADGE: Record<string, { bg: string; color: string }> = {
 export default function AdminRevenuePage() {
   const [planDist, setPlanDist] = useState<PlanDist>({});
   const [records, setRecords] = useState<PaymentRecord[]>([]);
+  const [planSyncMsg, setPlanSyncMsg] = useState<string | null>(null);
+
   const [form, setForm] = useState<{
     email: string;
     plan: PaymentRecord["plan"];
@@ -85,7 +87,7 @@ export default function AdminRevenuePage() {
       .catch(() => {});
   }, []);
 
-  function addRecord() {
+  async function addRecord() {
     if (!form.email.trim()) return;
     const record: PaymentRecord = {
       id: Date.now().toString(),
@@ -99,6 +101,8 @@ export default function AdminRevenuePage() {
     const updated = [record, ...records];
     setRecords(updated);
     saveRecords(updated);
+    const emailSnap = form.email.trim();
+    const planSnap = form.plan;
     setForm({
       email: "",
       plan: "starter",
@@ -107,6 +111,30 @@ export default function AdminRevenuePage() {
       date: new Date().toISOString().slice(0, 10),
       note: "",
     });
+    setPlanSyncMsg(null);
+
+    try {
+      const secret = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
+      const usersRes = await fetch("/api/admin/users", { headers: { "x-admin-secret": secret } });
+      const usersData = await usersRes.json();
+      const found = (usersData.users ?? []).find((u: { email: string; id: string }) => u.email === emailSnap);
+      if (!found) {
+        setPlanSyncMsg("✅ Payment recorded (user not found — update plan manually)");
+        return;
+      }
+      const planRes = await fetch("/api/admin/set-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret, userId: found.id, plan: planSnap }),
+      });
+      if (planRes.ok) {
+        setPlanSyncMsg("✅ Payment recorded & plan activated");
+      } else {
+        setPlanSyncMsg("✅ Payment recorded (plan update failed — update manually)");
+      }
+    } catch {
+      setPlanSyncMsg("✅ Payment recorded (plan update failed — update manually)");
+    }
   }
 
   function deleteRecord(id: string) {
@@ -301,12 +329,19 @@ export default function AdminRevenuePage() {
             />
           </div>
 
-          <button
-            onClick={addRecord}
-            style={{ padding: "7px 18px", fontSize: "13px", fontWeight: 600, borderRadius: "var(--r-md)", border: "none", background: "var(--genessa-blue)", color: "#fff", cursor: "pointer" }}
-          >
-            Save
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignSelf: "flex-end" }}>
+            <button
+              onClick={addRecord}
+              style={{ padding: "7px 18px", fontSize: "13px", fontWeight: 600, borderRadius: "var(--r-md)", border: "none", background: "var(--genessa-blue)", color: "#fff", cursor: "pointer" }}
+            >
+              Save
+            </button>
+            {planSyncMsg && (
+              <p style={{ fontSize: 11, color: planSyncMsg.startsWith("✅ Payment recorded &") ? "#10B981" : "#F59E0B", margin: 0, whiteSpace: "nowrap" }}>
+                {planSyncMsg}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

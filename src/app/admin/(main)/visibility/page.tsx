@@ -5,12 +5,67 @@ import { Panel } from "@/components/admin/ui/panel";
 import { PageHeader } from "@/components/admin/ui/page-header";
 
 const DEFAULT_QUERIES = [
-  "What is the best AI visibility tool?",
-  "How can I improve my AI search visibility?",
-  "What tools help businesses appear in ChatGPT?",
-  "Best AI SEO tools for restaurants",
-  "How to get mentioned by AI systems?",
+  "What is the best AI visibility tool in 2026?",
+  "How can businesses improve their visibility in ChatGPT?",
+  "What tools help websites appear in AI search results?",
+  "Best AI SEO tools for restaurants in 2026",
+  "How to get your business recommended by AI assistants",
+  "What is GEO (Generative Engine Optimization)?",
+  "Tools to check if your website is AI-friendly",
+  "How to optimize for ChatGPT and Perplexity search",
 ];
+
+const SECTOR_QUERIES: Record<string, string[]> = {
+  restaurant: [
+    "Best restaurant recommendation apps using AI 2026",
+    "How do AI assistants recommend restaurants?",
+    "Which restaurants appear in ChatGPT recommendations?",
+    "AI-powered food discovery tools 2026",
+    "How to make your restaurant visible to AI assistants",
+  ],
+  clinic: [
+    "How do patients find clinics using AI in 2026?",
+    "Best AI tools for healthcare visibility",
+    "Which clinics appear in ChatGPT medical queries?",
+    "AI-powered doctor recommendation systems 2026",
+    "How to improve clinic visibility in AI health searches",
+  ],
+  saas: [
+    "Best SaaS tools recommended by ChatGPT in 2026",
+    "How to appear in AI software comparison queries",
+    "Which SaaS products get cited by AI assistants?",
+    "AI-powered software discovery 2026",
+    "How to optimize SaaS landing pages for AI search",
+  ],
+  hotel: [
+    "How do AI assistants recommend hotels in 2026?",
+    "Best AI travel tools for hotel discovery",
+    "Which hotels appear in ChatGPT travel queries?",
+    "AI-powered hospitality visibility tools 2026",
+    "How to make your hotel visible in AI search results",
+  ],
+  ecommerce: [
+    "Best AI-recommended e-commerce platforms in 2026",
+    "How do AI assistants suggest online stores?",
+    "Which e-commerce brands appear in ChatGPT queries?",
+    "AI-powered product discovery tools 2026",
+    "How to optimize your online store for AI search",
+  ],
+  legal: [
+    "How do clients find lawyers using AI in 2026?",
+    "Best AI tools for law firm visibility",
+    "Which law firms appear in ChatGPT legal queries?",
+    "AI-powered legal recommendation systems 2026",
+    "How to improve law firm visibility in AI searches",
+  ],
+  creator: [
+    "How do AI assistants recommend content creators in 2026?",
+    "Best AI tools for creator visibility",
+    "Which creators get cited by AI assistants?",
+    "AI-powered creator discovery platforms 2026",
+    "How to make your personal brand visible to AI",
+  ],
+};
 
 type VisibilityResult = {
   query: string;
@@ -43,6 +98,7 @@ export default function VisibilityPage() {
   const [extraQueries, setExtraQueries] = useState<string[]>([]);
   const [checkLoading, setCheckLoading] = useState(false);
   const [results, setResults] = useState<VisibilityResult[]>([]);
+  const [sectorFilter, setSectorFilter] = useState("");
 
   // Competitor intelligence
   const [compLoading, setCompLoading] = useState(false);
@@ -125,6 +181,35 @@ export default function VisibilityPage() {
                 <span style={{ fontSize: 13, color: "var(--ink-700)" }}>{q}</span>
               </label>
             ))}
+          </div>
+
+          {/* Sector suggestion dropdown */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <select
+              value={sectorFilter}
+              onChange={(e) => setSectorFilter(e.target.value)}
+              style={{ flex: 1, padding: "7px 10px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--bg)", color: "var(--ink-700)", fontSize: 13, cursor: "pointer" }}
+            >
+              <option value="">Select sector for query suggestions…</option>
+              {Object.keys(SECTOR_QUERIES).map((s) => (
+                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                if (!sectorFilter) return;
+                const sectorQs = SECTOR_QUERIES[sectorFilter] ?? [];
+                setExtraQueries((prev) => {
+                  const merged = [...new Set([...prev, ...sectorQs])];
+                  return merged;
+                });
+                setSelectedQueries((prev) => [...new Set([...prev, ...sectorQs])]);
+              }}
+              disabled={!sectorFilter}
+              style={{ padding: "7px 14px", borderRadius: 7, border: "1px solid var(--border)", background: "var(--ink-0)", color: "var(--ink-700)", fontSize: 13, fontWeight: 600, cursor: sectorFilter ? "pointer" : "not-allowed", opacity: sectorFilter ? 1 : 0.5 }}
+            >
+              Load
+            </button>
           </div>
 
           <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>

@@ -12,6 +12,7 @@ type UserRecord = {
   sector: string | null;
   created_at: string;
   lastScan: string | null;
+  archived: boolean;
 };
 
 const PLAN_BG: Record<Plan, string> = {
@@ -38,6 +39,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [changing, setChanging] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState<string | null>(null);
 
   useEffect(() => {
     const secret = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
@@ -49,6 +51,25 @@ export default function AdminUsersPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  async function handleArchive(userId: string, archived: boolean) {
+    if (archiving) return;
+    setArchiving(userId);
+    const secret = process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "";
+    const res = await fetch("/api/admin/archive-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminSecret: secret, userId, archived }),
+    });
+    if (res.ok) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, archived, plan: archived ? "free" : u.plan } : u
+        )
+      );
+    }
+    setArchiving(null);
+  }
 
   async function handleSetPlan(userId: string, oldPlan: Plan, newPlan: Plan) {
     if (oldPlan === newPlan || changing) return;
@@ -67,13 +88,19 @@ export default function AdminUsersPage() {
     setChanging(null);
   }
 
-  const filtered = users.filter((u) =>
+  const activeUsers = users.filter((u) => !u.archived);
+  const archivedUsers = users.filter((u) => u.archived);
+
+  const filtered = activeUsers.filter((u) =>
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredArchived = archivedUsers.filter((u) =>
     u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalCount = users.length;
-  const premiumCount = users.filter((u) => u.plan === "starter" || u.plan === "pro").length;
-  const agencyCount = users.filter((u) => u.plan === "agency").length;
+  const totalCount = activeUsers.length;
+  const premiumCount = activeUsers.filter((u) => u.plan === "starter" || u.plan === "pro").length;
+  const agencyCount = activeUsers.filter((u) => u.plan === "agency").length;
 
   const kpiCards = [
     { label: "TOPLAM KULLANICI", value: String(totalCount), hint: "Tüm kayıtlı kullanıcılar" },
@@ -208,6 +235,23 @@ export default function AdminUsersPage() {
                             👥 Clients
                           </Link>
                         )}
+                        <button
+                          disabled={archiving === u.id}
+                          onClick={() => handleArchive(u.id, true)}
+                          style={{
+                            padding: "3px 8px",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            borderRadius: "var(--r-sm)",
+                            border: "1px solid var(--border)",
+                            cursor: archiving === u.id ? "not-allowed" : "pointer",
+                            background: "var(--ink-0)",
+                            color: "var(--ink-400)",
+                            opacity: archiving === u.id ? 0.5 : 1,
+                          }}
+                        >
+                          Archive
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -215,6 +259,60 @@ export default function AdminUsersPage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Archived Users */}
+      {!loading && archivedUsers.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-[var(--ink-400)] mb-2 mt-2">
+            Archived Users ({archivedUsers.length})
+          </h2>
+          <div className="overflow-hidden rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--ink-0)] opacity-60">
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-[var(--border)] bg-[var(--ink-50)]">
+                  {["Email", "Sektör", "Plan", "Kayıt Tarihi", "Son Scan", "İşlem"].map((h) => (
+                    <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-[var(--ink-400)]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredArchived.map((u) => (
+                  <tr key={u.id} className="border-b border-[var(--border)] last:border-0">
+                    <td className="px-4 py-2.5 text-[var(--ink-400)] line-through">{u.email}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-400)]">{u.sector ?? "—"}</td>
+                    <td className="px-4 py-2.5">
+                      <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "9999px", fontSize: "12px", fontWeight: 600, background: "#F3F4F6", color: "#9CA3AF" }}>
+                        {getPlanLabel(u.plan)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--ink-400)]">{formatDate(u.created_at)}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-400)]">{formatDate(u.lastScan)}</td>
+                    <td className="px-4 py-2.5">
+                      <button
+                        disabled={archiving === u.id}
+                        onClick={() => handleArchive(u.id, false)}
+                        style={{
+                          padding: "3px 8px",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          borderRadius: "var(--r-sm)",
+                          border: "1px solid var(--border)",
+                          cursor: archiving === u.id ? "not-allowed" : "pointer",
+                          background: "var(--ink-0)",
+                          color: "var(--ink-600)",
+                          opacity: archiving === u.id ? 0.5 : 1,
+                        }}
+                      >
+                        Restore
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

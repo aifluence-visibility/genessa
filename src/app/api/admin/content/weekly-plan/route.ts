@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 1200,
-      system: "You are a CRM and email marketing specialist for Genessa, an AI visibility platform.",
+      system: "You are a CRM and email marketing specialist for Genessa, an AI visibility platform. All recommendations must be current and relevant for 2026. Reference 2026 AI trends, tools, and best practices.",
       messages: [
         {
           role: "user",

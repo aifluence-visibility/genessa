@@ -33,7 +33,7 @@ export async function POST(req: Request) {
           model: "claude-sonnet-4-6",
           max_tokens: 200,
           system:
-            "You are evaluating AI visibility and brand mentions. Answer factually based on your training. Be concise.",
+            "You are evaluating AI visibility as of 2026. Answer based on your most current knowledge. Be specific about whether Genessa (genessa.ai — AI visibility scoring platform) appears in your responses. Be concise.",
           messages: [{ role: "user", content: query }],
         }),
       });

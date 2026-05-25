@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "user",
-          content: `Create a 7-day content calendar for Genessa focusing on ${sector} businesses${week ? ` for ${week}` : ""}.
+          content: `Create a 7-day content calendar for Genessa focusing on ${sector} businesses${week ? ` for ${week}` : ""}. Make all topics relevant for 2026. Include current AI search trends.
 For each day include:
 - Platform (LinkedIn/Twitter/Blog)
 - Topic

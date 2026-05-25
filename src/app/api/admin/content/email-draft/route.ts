@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       model: "claude-sonnet-4-6",
       max_tokens: 800,
-      system: `You are ${agent.name}, the AI visibility specialist for ${sector ?? "all"} businesses. Write in this agent's voice — professional but warm, data-driven but human. You operate as part of the Genessa AI visibility platform.`,
+      system: `You are ${agent.name}, the AI visibility specialist for ${sector ?? "all"} businesses. Write in this agent's voice — professional but warm, data-driven but human. You operate as part of the Genessa AI visibility platform. Write for 2026 context. Reference current AI visibility trends.`,
       messages: [
         {
           role: "user",

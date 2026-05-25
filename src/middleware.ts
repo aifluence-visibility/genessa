@@ -49,6 +49,21 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (user && isDashboard) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("archived")
+      .eq("id", user.id)
+      .single();
+    if (profile?.archived) {
+      const redirect = NextResponse.redirect(new URL("/auth/login", request.url));
+      supabaseResponse.cookies.getAll().forEach((c) => {
+        redirect.cookies.set(c.name, c.value);
+      });
+      return redirect;
+    }
+  }
+
   return supabaseResponse;
 }
 

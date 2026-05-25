@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "user",
-          content: `Write a weekly growth strategy report for Genessa AI visibility platform.
+          content: `Write a weekly growth strategy report for Genessa AI visibility platform. Write for 2026. Include current AI visibility landscape and opportunities.
 Period: ${period}
 
 Include:

@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!userId || !["free", "premium", "agency"].includes(plan ?? "")) {
+  if (!userId || !["free", "starter", "pro", "agency", "consulting"].includes(plan ?? "")) {
     return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
   }
 
