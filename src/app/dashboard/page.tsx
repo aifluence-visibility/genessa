@@ -27,6 +27,13 @@ interface ScanRecord {
   created_at: string;
 }
 
+interface AgencyDomain {
+  id: string;
+  domain: string;
+  sector: string | null;
+  last_score: number | null;
+}
+
 // ─── Animated counter ──────────────────────────────────────────────────────────
 function useCounter(target: number | null, duration = 1400) {
   const [count, setCount] = useState(0);
@@ -203,6 +210,12 @@ function ChecklistItem({ done, label, points, locked }: { done: boolean; label: 
 
 
 // ─── Sector data ───────────────────────────────────────────────────────────────
+const SECTOR_EMOJI: Record<string, string> = {
+  restaurant: "🍽️", clinic: "🏥", saas: "💻", hotel: "🏨",
+  creator: "🎨", legal: "⚖️", ecommerce: "🛒", other: "🔧",
+  hospitality: "🏨", education: "🎓", realestate: "🏠", finance: "💰", marketing: "📢",
+};
+
 const SECTOR_AGENTS: Record<string, { name: string; label: string }> = {
   restaurant:  { name: "Savor",  label: "Restaurant" },
   hospitality: { name: "Haven",  label: "Hospitality" },
@@ -241,84 +254,84 @@ type GrowthAuditResult = {
 
 const SECTOR_CHECKLIST: Record<string, ChecklistEntry[]> = {
   restaurant: [
-    { label: "Google Business Profile'ı optimize et",        priority: "this_week",   points: 15 },
-    { label: "Menüyü schema.org/Menu ile işaretle",           priority: "this_week",   points: 12 },
-    { label: "llms.txt dosyası ekle",                         priority: "this_week",   points: 10 },
-    { label: "TripAdvisor ve Yelp profillerini güncelle",     priority: "this_month",  points: 10 },
-    { label: "Rezervasyon linkini structured data'ya ekle",   priority: "this_month",  points:  8 },
-    { label: "Müşteri yorumlarına düzenli yanıt ver",         priority: "this_month",  points:  8 },
-    { label: "Yerel mutfak içeriği blog yazıları yaz",        priority: "long_term",   points:  6 },
-    { label: "Rakip mention analizi yap",                     priority: "long_term",   points:  5 },
+    { label: "Optimise your Google Business Profile",         priority: "this_week",   points: 15 },
+    { label: "Mark up your menu with schema.org/Menu",        priority: "this_week",   points: 12 },
+    { label: "Add llms.txt file",                             priority: "this_week",   points: 10 },
+    { label: "Update TripAdvisor and Yelp profiles",          priority: "this_month",  points: 10 },
+    { label: "Add booking link to structured data",           priority: "this_month",  points:  8 },
+    { label: "Respond regularly to customer reviews",         priority: "this_month",  points:  8 },
+    { label: "Write local cuisine content blog posts",        priority: "long_term",   points:  6 },
+    { label: "Run competitor mention analysis",               priority: "long_term",   points:  5 },
   ],
   clinic: [
-    { label: "MedicalOrganization schema ekle",                        priority: "this_week",   points: 15 },
-    { label: "Doktor profillerini Person schema ile işaretle",          priority: "this_week",   points: 12 },
-    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
-    { label: "Hasta yorumları için yapılandırılmış süreç kur",          priority: "this_month",  points: 10 },
-    { label: "Hizmet sayfalarını FAQ schema ile zenginleştir",          priority: "this_month",  points:  8 },
-    { label: "Sağlık içeriği için E-E-A-T sinyallerini güçlendir",     priority: "this_month",  points:  8 },
-    { label: "Medikal authority makaleleri yayımla",                    priority: "long_term",   points:  6 },
-    { label: "Diğer sağlık kurumlarından backlink al",                  priority: "long_term",   points:  5 },
+    { label: "Add MedicalOrganization schema",                          priority: "this_week",   points: 15 },
+    { label: "Mark up doctor profiles with Person schema",              priority: "this_week",   points: 12 },
+    { label: "Add llms.txt file",                                       priority: "this_week",   points: 10 },
+    { label: "Set up a structured process for patient reviews",         priority: "this_month",  points: 10 },
+    { label: "Enrich service pages with FAQ schema",                    priority: "this_month",  points:  8 },
+    { label: "Strengthen E-E-A-T signals for health content",          priority: "this_month",  points:  8 },
+    { label: "Publish medical authority articles",                      priority: "long_term",   points:  6 },
+    { label: "Earn backlinks from other health institutions",           priority: "long_term",   points:  5 },
   ],
   saas: [
-    { label: "SoftwareApplication schema ekle",                        priority: "this_week",   points: 15 },
-    { label: "llms.txt ve ai.txt dosyaları ekle",                      priority: "this_week",   points: 12 },
-    { label: "Ürün karşılaştırma sayfası oluştur",                     priority: "this_week",   points: 10 },
-    { label: "G2 ve Capterra profillerini güncelle",                   priority: "this_month",  points: 10 },
-    { label: "API dokümantasyonunu AI'a okunur hale getir",            priority: "this_month",  points:  8 },
-    { label: "Use case sayfaları ekle (sektör bazlı)",                 priority: "this_month",  points:  8 },
-    { label: "Thought leadership blog yazıları yaz",                   priority: "long_term",   points:  6 },
-    { label: "Developer community varlığı oluştur",                    priority: "long_term",   points:  5 },
+    { label: "Add SoftwareApplication schema",                          priority: "this_week",   points: 15 },
+    { label: "Add llms.txt and ai.txt files",                           priority: "this_week",   points: 12 },
+    { label: "Create a product comparison page",                        priority: "this_week",   points: 10 },
+    { label: "Update G2 and Capterra profiles",                         priority: "this_month",  points: 10 },
+    { label: "Make API documentation AI-readable",                      priority: "this_month",  points:  8 },
+    { label: "Add use case pages by sector",                            priority: "this_month",  points:  8 },
+    { label: "Write thought leadership blog posts",                     priority: "long_term",   points:  6 },
+    { label: "Build a developer community presence",                    priority: "long_term",   points:  5 },
   ],
   hotel: [
-    { label: "LodgingBusiness schema ekle",                            priority: "this_week",   points: 15 },
-    { label: "Oda tiplerini schema ile işaretle",                       priority: "this_week",   points: 12 },
-    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
-    { label: "Direkt rezervasyon CTA'sını öne çıkar",                  priority: "this_month",  points: 10 },
-    { label: "Booking.com ve TripAdvisor profillerini optimize et",    priority: "this_month",  points:  8 },
-    { label: "Deneyim içeriği sayfaları oluştur",                      priority: "this_month",  points:  8 },
-    { label: "Yerel etkinlik ve gezi rehberi içerikleri ekle",         priority: "long_term",   points:  6 },
-    { label: "Misafir hikayeleri ve UGC stratejisi kur",               priority: "long_term",   points:  5 },
+    { label: "Add LodgingBusiness schema",                              priority: "this_week",   points: 15 },
+    { label: "Mark up room types with schema",                          priority: "this_week",   points: 12 },
+    { label: "Add llms.txt file",                                       priority: "this_week",   points: 10 },
+    { label: "Highlight direct booking CTA",                            priority: "this_month",  points: 10 },
+    { label: "Optimise Booking.com and TripAdvisor profiles",          priority: "this_month",  points:  8 },
+    { label: "Create experience content pages",                         priority: "this_month",  points:  8 },
+    { label: "Add local events and travel guide content",               priority: "long_term",   points:  6 },
+    { label: "Set up a guest stories and UGC strategy",                 priority: "long_term",   points:  5 },
   ],
   creator: [
-    { label: "Person schema ekle (uzmanlık alanlarıyla)",              priority: "this_week",   points: 15 },
-    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 12 },
-    { label: "LinkedIn profilini AI okunabilir hale getir",            priority: "this_week",   points: 10 },
-    { label: "Medya görünümleri ve basın sayfası oluştur",             priority: "this_month",  points: 10 },
-    { label: "Uzmanlık alanı için FAQ sayfası yaz",                    priority: "this_month",  points:  8 },
-    { label: "Podcast ve röportaj geçmişini belgele",                  priority: "this_month",  points:  8 },
-    { label: "Düzenli thought leadership içerik takvimi kur",          priority: "long_term",   points:  6 },
-    { label: "Niche community'lerde aktif ol",                         priority: "long_term",   points:  5 },
+    { label: "Add Person schema with expertise areas",                  priority: "this_week",   points: 15 },
+    { label: "Add llms.txt file",                                       priority: "this_week",   points: 12 },
+    { label: "Make your LinkedIn profile AI-readable",                  priority: "this_week",   points: 10 },
+    { label: "Create a media appearances and press page",               priority: "this_month",  points: 10 },
+    { label: "Write an FAQ page for your area of expertise",            priority: "this_month",  points:  8 },
+    { label: "Document your podcast and interview history",             priority: "this_month",  points:  8 },
+    { label: "Set up a regular thought leadership content calendar",    priority: "long_term",   points:  6 },
+    { label: "Be active in niche communities",                          priority: "long_term",   points:  5 },
   ],
   legal: [
-    { label: "LegalService schema ekle",                               priority: "this_week",   points: 15 },
-    { label: "Avukat profillerini Person schema ile işaretle",         priority: "this_week",   points: 12 },
-    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 10 },
-    { label: "Uzmanlık alanı hukuki rehber içerikleri yaz",           priority: "this_month",  points: 10 },
-    { label: "Avukat derneği profillerini güncelle",                   priority: "this_month",  points:  8 },
-    { label: "Müvekkil yorumları için yapı kur",                       priority: "this_month",  points:  8 },
-    { label: "Hukuki içerik authority sinyallerini güçlendir",        priority: "long_term",   points:  6 },
-    { label: "Akademik veya sektörel yayınlarda yer al",              priority: "long_term",   points:  5 },
+    { label: "Add LegalService schema",                                 priority: "this_week",   points: 15 },
+    { label: "Mark up lawyer profiles with Person schema",              priority: "this_week",   points: 12 },
+    { label: "Add llms.txt file",                                       priority: "this_week",   points: 10 },
+    { label: "Write legal guide content for your practice area",        priority: "this_month",  points: 10 },
+    { label: "Update bar association profiles",                         priority: "this_month",  points:  8 },
+    { label: "Set up a structure for client reviews",                   priority: "this_month",  points:  8 },
+    { label: "Strengthen authority signals for legal content",          priority: "long_term",   points:  6 },
+    { label: "Get featured in academic or industry publications",       priority: "long_term",   points:  5 },
   ],
   ecommerce: [
-    { label: "Product schema'yı tüm ürünlere ekle",                   priority: "this_week",   points: 15 },
-    { label: "llms.txt ve AI alışveriş sinyalleri ekle",              priority: "this_week",   points: 12 },
-    { label: "Ürün açıklamalarını AI okunabilir hale getir",          priority: "this_week",   points: 10 },
-    { label: "Google Merchant Center'ı güncelle",                      priority: "this_month",  points: 10 },
-    { label: "Kategori sayfalarına FAQ schema ekle",                   priority: "this_month",  points:  8 },
-    { label: "Müşteri yorumlarını structured data ile işaretle",      priority: "this_month",  points:  8 },
-    { label: "Ürün karşılaştırma sayfaları oluştur",                  priority: "long_term",   points:  6 },
-    { label: "Satın alma rehberi içerikleri yaz",                      priority: "long_term",   points:  5 },
+    { label: "Add Product schema to all products",                      priority: "this_week",   points: 15 },
+    { label: "Add llms.txt and AI shopping signals",                    priority: "this_week",   points: 12 },
+    { label: "Make product descriptions AI-readable",                   priority: "this_week",   points: 10 },
+    { label: "Update Google Merchant Center",                           priority: "this_month",  points: 10 },
+    { label: "Add FAQ schema to category pages",                        priority: "this_month",  points:  8 },
+    { label: "Mark up customer reviews with structured data",           priority: "this_month",  points:  8 },
+    { label: "Create product comparison pages",                         priority: "long_term",   points:  6 },
+    { label: "Write buying guide content",                              priority: "long_term",   points:  5 },
   ],
   other: [
-    { label: "Organization schema ekle",                               priority: "this_week",   points: 15 },
-    { label: "llms.txt dosyası ekle",                                   priority: "this_week",   points: 12 },
-    { label: "Open Graph meta etiketlerini tamamla",                   priority: "this_week",   points: 10 },
-    { label: "FAQ schema ile içerikleri zenginleştir",                 priority: "this_month",  points: 10 },
-    { label: "Sayfa hız optimizasyonu yap",                            priority: "this_month",  points:  8 },
-    { label: "İçerik tazeliğini düzenli güncelle",                    priority: "this_month",  points:  8 },
-    { label: "Backlink profili geliştir",                              priority: "long_term",   points:  6 },
-    { label: "AI mention takip sistemi kur",                           priority: "long_term",   points:  5 },
+    { label: "Add Organization schema",                                 priority: "this_week",   points: 15 },
+    { label: "Add llms.txt file",                                       priority: "this_week",   points: 12 },
+    { label: "Complete Open Graph meta tags",                           priority: "this_week",   points: 10 },
+    { label: "Enrich content with FAQ schema",                          priority: "this_month",  points: 10 },
+    { label: "Optimise page speed",                                     priority: "this_month",  points:  8 },
+    { label: "Regularly update content freshness",                      priority: "this_month",  points:  8 },
+    { label: "Develop your backlink profile",                           priority: "long_term",   points:  6 },
+    { label: "Set up an AI mention tracking system",                    priority: "long_term",   points:  5 },
   ],
 };
 
@@ -345,60 +358,60 @@ const SECTOR_COPY: Record<string, {
   reportTitle: string;
 }> = {
   restaurant: {
-    heroTitle: "Restoran & Kafe AI Görünürlüğü",
-    heroSub: "ChatGPT ve Google'da 'en iyi kafe' aramalarında seni önersin.",
-    ctaLabel: "Restoranımı Tara",
-    scanLabel: "Yerel AI Taraması",
-    reportTitle: "Restoran AI Görünürlük Raporu",
+    heroTitle: "Restaurant & Café AI Visibility",
+    heroSub: "Let ChatGPT and Google recommend you for 'best café' searches.",
+    ctaLabel: "Scan My Restaurant",
+    scanLabel: "Local AI Scan",
+    reportTitle: "Restaurant AI Visibility Report",
   },
   clinic: {
-    heroTitle: "Klinik & Sağlık AI Görünürlüğü",
-    heroSub: "Hastalar AI'a soruyor — senin kliniğin öneriliyor mu?",
-    ctaLabel: "Kliniğimi Tara",
-    scanLabel: "Sağlık AI Taraması",
-    reportTitle: "Klinik AI Görünürlük Raporu",
+    heroTitle: "Clinic & Health AI Visibility",
+    heroSub: "Patients are asking AI — is your clinic being recommended?",
+    ctaLabel: "Scan My Clinic",
+    scanLabel: "Health AI Scan",
+    reportTitle: "Clinic AI Visibility Report",
   },
   saas: {
-    heroTitle: "SaaS & Tech AI Görünürlüğü",
-    heroSub: "AI karşılaştırma sorgularında ürünün görünüyor mu?",
-    ctaLabel: "Ürünümü Tara",
-    scanLabel: "SaaS AI Taraması",
-    reportTitle: "SaaS AI Görünürlük Raporu",
+    heroTitle: "SaaS & Tech AI Visibility",
+    heroSub: "Does your product show up in AI comparison queries?",
+    ctaLabel: "Scan My Product",
+    scanLabel: "SaaS AI Scan",
+    reportTitle: "SaaS AI Visibility Report",
   },
   hotel: {
-    heroTitle: "Otel & Konaklama AI Görünürlüğü",
-    heroSub: "AI seyahat asistanları otelinizi öneriyor mu?",
-    ctaLabel: "Otelimi Tara",
-    scanLabel: "Konaklama AI Taraması",
-    reportTitle: "Otel AI Görünürlük Raporu",
+    heroTitle: "Hotel & Hospitality AI Visibility",
+    heroSub: "Are AI travel assistants recommending your hotel?",
+    ctaLabel: "Scan My Hotel",
+    scanLabel: "Hospitality AI Scan",
+    reportTitle: "Hotel AI Visibility Report",
   },
   creator: {
-    heroTitle: "Creator & Danışman AI Görünürlüğü",
-    heroSub: "AI sistemleri seni uzman olarak tanıyor mu?",
-    ctaLabel: "Profilimi Tara",
-    scanLabel: "Creator AI Taraması",
-    reportTitle: "Creator AI Görünürlük Raporu",
+    heroTitle: "Creator & Consultant AI Visibility",
+    heroSub: "Do AI systems recognise you as an expert?",
+    ctaLabel: "Scan My Profile",
+    scanLabel: "Creator AI Scan",
+    reportTitle: "Creator AI Visibility Report",
   },
   legal: {
-    heroTitle: "Hukuk & Finans AI Görünürlüğü",
-    heroSub: "Müvekkiller AI'a soruyor — E-E-A-T sinyallerin güçlü mü?",
-    ctaLabel: "Firmamı Tara",
-    scanLabel: "Hukuk AI Taraması",
-    reportTitle: "Hukuk AI Görünürlük Raporu",
+    heroTitle: "Legal & Finance AI Visibility",
+    heroSub: "Clients are asking AI — are your E-E-A-T signals strong?",
+    ctaLabel: "Scan My Firm",
+    scanLabel: "Legal AI Scan",
+    reportTitle: "Legal AI Visibility Report",
   },
   ecommerce: {
-    heroTitle: "E-ticaret AI Görünürlüğü",
-    heroSub: "AI alışveriş asistanları ürünlerini öneriyor mu?",
-    ctaLabel: "Mağazamı Tara",
-    scanLabel: "E-ticaret AI Taraması",
-    reportTitle: "E-ticaret AI Görünürlük Raporu",
+    heroTitle: "E-Commerce AI Visibility",
+    heroSub: "Are AI shopping assistants recommending your products?",
+    ctaLabel: "Scan My Store",
+    scanLabel: "E-Commerce AI Scan",
+    reportTitle: "E-Commerce AI Visibility Report",
   },
   other: {
-    heroTitle: "AI Görünürlük Analizi",
-    heroSub: "AI sistemleri sizi buluyor ve öneriyor mu?",
-    ctaLabel: "Siteyi Tara",
-    scanLabel: "AI Taraması",
-    reportTitle: "AI Görünürlük Raporu",
+    heroTitle: "AI Visibility Analysis",
+    heroSub: "Can AI systems find and recommend you?",
+    ctaLabel: "Scan My Site",
+    scanLabel: "AI Scan",
+    reportTitle: "AI Visibility Report",
   },
 };
 
@@ -483,10 +496,10 @@ function SectorModal({ onClose, onSelect }: { onClose: () => void; onSelect: (se
         border: "1px solid #E5E7EB",
       }}>
         <h2 style={{ fontSize: 21, fontWeight: 700, color: "#111827", margin: "0 0 6px", letterSpacing: "-0.025em" }}>
-          İşletmeniz hangi sektörde?
+          What sector is your business in?
         </h2>
         <p style={{ fontSize: 14, color: "#6B7280", margin: "0 0 26px", lineHeight: 1.5 }}>
-          Sektörünüze özel AI analizi için seçin
+          Select for sector-specific AI analysis
         </p>
 
         <div style={{
@@ -523,7 +536,7 @@ function SectorModal({ onClose, onSelect }: { onClose: () => void; onSelect: (se
               cursor: "pointer", fontFamily: "var(--font-geist-sans)", padding: "4px 0",
             }}
           >
-            Daha sonra seç
+            Skip for now
           </button>
         </div>
       </div>
@@ -539,7 +552,7 @@ type UpgradeModalProps = {
 
 function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
   const whatsappMessage = encodeURIComponent(
-    `Merhaba, Genessa'da "${feature}" özelliğini kullanmak istiyorum. Premium plana geçmek hakkında bilgi alabilir miyim?`
+    `Hi! I'm interested in upgrading my Genessa plan to access "${feature}". Could you share the details?`
   );
   const whatsappUrl = `https://wa.me/90525788737?text=${whatsappMessage}`;
 
@@ -762,6 +775,7 @@ export default function Dashboard() {
   const [showRescanUpsell, setShowRescanUpsell] = useState(false);
   const [scanHistoryLoaded, setScanHistoryLoaded] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [agencyDomains, setAgencyDomains] = useState<AgencyDomain[]>([]);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -847,6 +861,19 @@ export default function Dashboard() {
         setScanHistoryLoaded(true);
       });
   }, [user]);
+
+  useEffect(() => {
+    if (!user || !profileLoaded) return;
+    if (plan !== "agency" && plan !== "consulting") return;
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from("agency_domains")
+      .select("id, domain, sector, last_score")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data) setAgencyDomains(data as AgencyDomain[]);
+      });
+  }, [user, plan, profileLoaded]);
 
   // Handle ?rescan=domain URL param
   useEffect(() => {
@@ -1075,27 +1102,99 @@ export default function Dashboard() {
           </div>
         )}
         {profileLoaded && (plan === "agency" || plan === "consulting") && (
-          <div style={{
-            padding: "20px 24px", borderRadius: 14, marginBottom: 16,
-            background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)",
-            border: "1px solid #FDE68A",
-            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
-          }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>
-                Enterprise Plan
-              </div>
-              <div style={{ fontSize: 13, color: "#B45309" }}>
-                Manage all your business entities from your Agency Panel
-              </div>
-            </div>
-            <Link href="/agency" style={{
-              padding: "9px 18px", borderRadius: 9, background: "#F59E0B",
-              color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none",
+          <>
+            <div style={{
+              padding: "20px 24px", borderRadius: 14, marginBottom: 16,
+              background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)",
+              border: "1px solid #FDE68A",
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
             }}>
-              Go to Agency Panel →
-            </Link>
-          </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>
+                  Enterprise Plan
+                </div>
+                <div style={{ fontSize: 13, color: "#B45309" }}>
+                  Manage all your business entities from your Agency Panel
+                </div>
+              </div>
+              <Link href="/agency" style={{
+                padding: "9px 18px", borderRadius: 9, background: "#F59E0B",
+                color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none",
+              }}>
+                Go to Agency Panel →
+              </Link>
+            </div>
+
+            {/* My Entities */}
+            <section style={{
+              borderRadius: 16, padding: "20px 24px", marginBottom: 16,
+              background: "#fff", border: "1px solid #E5E7EB",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>My Entities</div>
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Businesses under your account</div>
+                </div>
+                <Link href="/agency" style={{
+                  fontSize: 12, fontWeight: 600, color: "#F59E0B",
+                  textDecoration: "none", padding: "5px 12px", borderRadius: 7,
+                  background: "#FFFBEB", border: "1px solid #FDE68A",
+                }}>
+                  Agency Panel →
+                </Link>
+              </div>
+              {agencyDomains.length === 0 ? (
+                <div style={{ padding: "24px 0", textAlign: "center" }}>
+                  <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
+                    No entities yet. Add businesses from the Agency Panel.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {agencyDomains.map((entity) => (
+                    <div key={entity.id} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 16px", borderRadius: 10,
+                      background: "#F8F9FC", border: "1px solid #E5E7EB",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 18 }}>
+                          {SECTOR_EMOJI[entity.sector ?? "other"] ?? "🔧"}
+                        </span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{entity.domain}</div>
+                          <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
+                            Last score: {entity.last_score != null ? entity.last_score : "—"}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Link href="/agency" style={{
+                          fontSize: 11, fontWeight: 600, color: "#6B7280",
+                          textDecoration: "none", padding: "5px 10px", borderRadius: 7,
+                          background: "#fff", border: "1px solid #E5E7EB",
+                        }}>
+                          View Details
+                        </Link>
+                        <button
+                          onClick={() => router.push(`/score?domain=${encodeURIComponent(entity.domain)}`)}
+                          style={{
+                            fontSize: 11, fontWeight: 600, color: "#2952E3",
+                            padding: "5px 10px", borderRadius: 7,
+                            background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
+                            cursor: "pointer", fontFamily: "var(--font-geist-sans)",
+                          }}
+                        >
+                          Run Scan
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
         )}
 
         {!hasScan ? (
@@ -1323,7 +1422,7 @@ export default function Dashboard() {
                         {(["this_week", "this_month", "long_term"] as const).map((priority, gi) => {
                           const items = sectorChecklist.filter(c => c.priority === priority);
                           if (!items.length) return null;
-                          const groupLabel = priority === "this_week" ? "🔥 Bu Hafta" : priority === "this_month" ? "📅 Bu Ay" : "🎯 Uzun Vade";
+                          const groupLabel = priority === "this_week" ? "🔥 This Week" : priority === "this_month" ? "📅 This Month" : "🎯 Long Term";
                           const isNonFreeGroup = priority !== "this_week";
                           const isGated = isNonFreeGroup && !canAccess(plan, "checklistFull");
                           return (
@@ -1343,7 +1442,7 @@ export default function Dashboard() {
                                 </div>
                                 {isGated && (
                                   <div
-                                    onClick={() => setUpgradeModal("Tam Checklist")}
+                                    onClick={() => setUpgradeModal("Full Checklist")}
                                     style={{
                                       position: "absolute", inset: 0,
                                       display: "flex", alignItems: "center", justifyContent: "center",

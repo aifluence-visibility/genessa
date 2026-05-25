@@ -10,6 +10,7 @@ type NavItemDef = {
   plans: Plan[];
   lockLabel?: string;
   highlight?: boolean;
+  upgradeAction?: boolean;
 };
 
 const NAV_ITEMS: NavItemDef[] = [
@@ -22,7 +23,7 @@ const NAV_ITEMS: NavItemDef[] = [
   { href: "/dashboard/reports",     label: "Reports",       icon: "📄", plans: ["pro","agency","consulting"], lockLabel: "Pro+" },
   { href: "/dashboard/badge",       label: "My Badge",      icon: "🏅", plans: ["free","starter","pro","agency","consulting"] },
   { href: "/dashboard/settings",    label: "Settings",      icon: "⚙️", plans: ["free","starter","pro","agency","consulting"] },
-  { href: "/dashboard/upgrade",     label: "Upgrade",       icon: "⬆️", plans: ["free","starter","pro"], highlight: true },
+  { href: "/dashboard/upgrade",     label: "Upgrade",       icon: "⬆️", plans: ["free","starter","pro"], highlight: true, upgradeAction: true },
 ];
 
 type Props = {
@@ -30,9 +31,10 @@ type Props = {
   pathname: string;
   email?: string | null;
   onSignOut?: () => void;
+  onUpgrade?: () => void;
 };
 
-export default function DashboardNav({ plan, pathname, email, onSignOut }: Props) {
+export default function DashboardNav({ plan, pathname, email, onSignOut, onUpgrade }: Props) {
   const planColor = getPlanColor(plan);
   const planLabel = getPlanLabel(plan);
 
@@ -80,11 +82,18 @@ export default function DashboardNav({ plan, pathname, email, onSignOut }: Props
 
           if (!hasAccess) {
             return (
-              <Link key={item.href} href="/dashboard/upgrade" style={{ textDecoration: "none" }}>
+              <button
+                key={item.href}
+                onClick={onUpgrade}
+                style={{
+                  width: "100%", background: "none", border: "none",
+                  padding: 0, cursor: "pointer", textAlign: "left" as const,
+                }}
+              >
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "8px 10px", borderRadius: 8, marginBottom: 1,
-                  opacity: 0.45, cursor: "pointer",
+                  opacity: 0.45,
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                     <span style={{ fontSize: 14 }}>{item.icon}</span>
@@ -100,7 +109,31 @@ export default function DashboardNav({ plan, pathname, email, onSignOut }: Props
                     </span>
                   )}
                 </div>
-              </Link>
+              </button>
+            );
+          }
+
+          if (item.upgradeAction && onUpgrade) {
+            return (
+              <button
+                key={item.href}
+                onClick={onUpgrade}
+                style={{
+                  width: "100%", background: "none", border: "none",
+                  padding: 0, cursor: "pointer", textAlign: "left" as const,
+                }}
+              >
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  padding: "8px 10px", borderRadius: 8, marginBottom: 1,
+                  border: `1px solid ${planColor}44`,
+                }}>
+                  <span style={{ fontSize: 14 }}>{item.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 400, color: planColor }}>
+                    {item.label}
+                  </span>
+                </div>
+              </button>
             );
           }
 
