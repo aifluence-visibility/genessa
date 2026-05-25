@@ -173,7 +173,7 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
             <span className="truncate">{rawUrl}</span>
           </div>
           <div className="ml-auto flex items-center gap-3 shrink-0">
-            <button onClick={() => window.location.reload()} className="text-[13px] font-medium px-3 py-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] cursor-pointer"
+            <button onClick={() => router.push(`/dashboard?rescan=${encodeURIComponent(rawUrl)}`)} className="text-[13px] font-medium px-3 py-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)] cursor-pointer"
               style={{ fontFamily: "var(--font-geist-sans)" }}>Re-scan</button>
           </div>
         </div>

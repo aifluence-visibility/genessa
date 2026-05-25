@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { Plan } from "@/lib/plan";
+import { generateReport } from "@/lib/generateReport";
 
 const SECTORS = [
   { key: "restaurant", emoji: "🍽️", label: "Restaurant" },
@@ -221,6 +222,7 @@ export default function AgencyPage() {
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState<string | null>(null);
   const [newDomain, setNewDomain] = useState("");
   const [newSector, setNewSector] = useState("other");
   const [newNickname, setNewNickname] = useState("");
@@ -252,7 +254,7 @@ export default function AgencyPage() {
 
   useEffect(() => {
     if (!user || loading) return;
-    if (plan !== "agency") return;
+    if (plan !== "agency" && plan !== "consulting") return;
     loadDomains();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, plan, loading]);
@@ -376,8 +378,26 @@ export default function AgencyPage() {
     );
   }
 
-  if (plan !== "agency") {
+  if (plan !== "agency" && plan !== "consulting") {
     return <UpgradeWall />;
+  }
+
+  async function handleWeeklyReport(d: AgencyDomain) {
+    if (generatingReport) return;
+    setGeneratingReport(d.id);
+    try {
+      await generateReport({
+        domain: d.domain,
+        readiness: d.lastScan?.readiness_score ?? 0,
+        authority: d.lastScan?.authority_score ?? null,
+        influence: d.lastScan?.influence_score ?? null,
+        insight: null,
+        sectorLabel: sectorLabel(d.sector) || null,
+        checklist: null,
+      });
+    } finally {
+      setGeneratingReport(null);
+    }
   }
 
   const sortedForTable = [...domains].sort((a, b) => {
@@ -432,10 +452,10 @@ export default function AgencyPage() {
               color: "#111827",
             }}
           >
-            Agency Dashboard
+            Enterprise Plan — {domains.length} {domains.length === 1 ? "entity" : "entities"}
           </h1>
           <p style={{ fontSize: 13, color: "#9CA3AF", margin: "4px 0 0" }}>
-            Çoklu domain analizi ve karşılaştırma
+            Multi-domain analysis and comparison
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -807,13 +827,32 @@ export default function AgencyPage() {
                     fontFamily: "var(--font-geist-sans)",
                   }}
                 >
-                  Tara
+                  Scan
+                </button>
+                <button
+                  onClick={() => handleWeeklyReport(d)}
+                  disabled={generatingReport === d.id}
+                  style={{
+                    padding: "8px 12px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    borderRadius: 8,
+                    border: "1px solid #DDD6FE",
+                    background: generatingReport === d.id ? "#F5F3FF" : "#fff",
+                    color: "#7C3AED",
+                    cursor: generatingReport === d.id ? "wait" : "pointer",
+                    fontFamily: "var(--font-geist-sans)",
+                    opacity: generatingReport === d.id ? 0.6 : 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  📊 Report
                 </button>
                 <button
                   onClick={() => handleRemoveDomain(d.id)}
                   disabled={removing === d.id}
                   style={{
-                    padding: "8px 14px",
+                    padding: "8px 12px",
                     fontSize: 12,
                     fontWeight: 500,
                     borderRadius: 8,
@@ -825,7 +864,7 @@ export default function AgencyPage() {
                     opacity: removing === d.id ? 0.6 : 1,
                   }}
                 >
-                  Kaldır
+                  ✕
                 </button>
               </div>
             </div>

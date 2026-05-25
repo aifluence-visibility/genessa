@@ -624,8 +624,8 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
             <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
               ✓ Growth Audit<br/>
               ✓ PDF Export<br/>
-              ✓ 3 domains<br/>
-              ✓ Unlimited scans
+              ✓ 1 domain<br/>
+              ✓ 4 scans/week
             </div>
           </div>
         </div>
@@ -785,6 +785,9 @@ export default function Dashboard() {
   const [auditResult, setAuditResult] = useState<GrowthAuditResult | null>(null);
   const [plan, setPlan] = useState<Plan>("free");
   const [upgradeModal, setUpgradeModal] = useState<string | null>(null);
+  const [showRescanUpsell, setShowRescanUpsell] = useState(false);
+  const [scanHistoryLoaded, setScanHistoryLoaded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -851,6 +854,7 @@ export default function Dashboard() {
         const p = normalizePlan(data?.plan as string);
         setSector(s);
         setPlan(p);
+        setProfileLoaded(true);
         if (s === null) setShowSectorModal(true);
       });
   }, [user]);
@@ -863,10 +867,23 @@ export default function Dashboard() {
       .select("id, domain, readiness_score, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(10)
+      .limit(50)
       .then(({ data }) => {
         if (data) setScanHistory(data as ScanRecord[]);
+        setScanHistoryLoaded(true);
       });
+  }, [user]);
+
+  // Handle ?rescan=domain URL param
+  useEffect(() => {
+    if (!user) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const rescanDomain = params.get("rescan");
+    if (rescanDomain) {
+      window.history.replaceState({}, "", "/dashboard");
+      router.push(`/score?domain=${encodeURIComponent(rescanDomain)}`);
+    }
   }, [user]);
 
   async function handleSectorSelect(selectedSector: string) {
@@ -967,14 +984,17 @@ export default function Dashboard() {
   const fixedCount    = issues.filter(i => i.status === "fixed").length;
   const passingCount  = issues.filter(i => i.status === "passing").length;
 
-  const lastScanDate = scanHistory.length > 0 ? new Date(scanHistory[0].created_at) : null;
-  const daysSinceLastScan = lastScanDate ? (Date.now() - lastScanDate.getTime()) / (1000 * 60 * 60 * 24) : null;
-  // free: 1/month (30d), starter: 2/week (3.5d), pro/agency/consulting: unlimited (0d)
-  const scanIntervalDays = (PLAN_LIMITS[plan].unlimitedScans as boolean) ? 0
-    : plan === "starter" ? 3.5
-    : 30;
-  const canRescan = scanIntervalDays === 0 || daysSinceLastScan === null || daysSinceLastScan >= scanIntervalDays;
-  const daysUntilRescan = !canRescan && daysSinceLastScan !== null ? Math.ceil(scanIntervalDays - daysSinceLastScan) : 0;
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const scansThisWeek = scanHistory.filter(s => +new Date(s.created_at) > sevenDaysAgo).length;
+  const scansThisMonth = scanHistory.filter(s => +new Date(s.created_at) > thirtyDaysAgo).length;
+  const unlimited = PLAN_LIMITS[plan].unlimitedScans as boolean;
+  const weeklyLimit = PLAN_LIMITS[plan].scansPerWeek as number;
+  const monthlyLimit = PLAN_LIMITS[plan].scansPerMonth as number;
+  const canRescan = unlimited || (plan === "free" ? scansThisMonth < monthlyLimit : scansThisWeek < weeklyLimit);
+  const scansRemaining = unlimited ? 99 : plan === "free"
+    ? Math.max(0, monthlyLimit - scansThisMonth)
+    : Math.max(0, weeklyLimit - scansThisWeek);
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#F8F9FC", color: "#111827", overflow: "hidden" }}>
@@ -1185,6 +1205,76 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* ── Plan Banners ── */}
+        {profileLoaded && plan === "free" && (
+          <div style={{
+            padding: "12px 18px", borderRadius: 12, marginBottom: 16,
+            background: "#FFFBEB", border: "1px solid #FDE68A",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+          }}>
+            <span style={{ fontSize: 13, color: "#92400E", fontWeight: 500 }}>
+              You&apos;re on the <strong>Free plan</strong> — 1 scan per month · Limited insights
+            </span>
+            <Link href="/pricing" style={{
+              padding: "7px 14px", borderRadius: 8, background: "#7C3AED",
+              color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none",
+            }}>
+              Upgrade to Starter →
+            </Link>
+          </div>
+        )}
+        {profileLoaded && plan === "starter" && (
+          <div style={{
+            padding: "12px 18px", borderRadius: 12, marginBottom: 16,
+            background: "#EFF6FF", border: "1px solid #BFDBFE",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+          }}>
+            <span style={{ fontSize: 13, color: "#1E40AF", fontWeight: 600 }}>
+              Starter Plan · 2 scans/week
+            </span>
+            <span style={{ fontSize: 13, color: "#3B82F6", fontWeight: 500 }}>
+              {scansRemaining} scan{scansRemaining !== 1 ? "s" : ""} remaining this week
+            </span>
+          </div>
+        )}
+        {profileLoaded && plan === "pro" && (
+          <div style={{
+            padding: "12px 18px", borderRadius: 12, marginBottom: 16,
+            background: "#F5F3FF", border: "1px solid #DDD6FE",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+          }}>
+            <span style={{ fontSize: 13, color: "#5B21B6", fontWeight: 600 }}>
+              Pro Plan · 4 scans/week
+            </span>
+            <span style={{ fontSize: 13, color: "#7C3AED", fontWeight: 500 }}>
+              {scansRemaining} scan{scansRemaining !== 1 ? "s" : ""} remaining this week
+            </span>
+          </div>
+        )}
+        {profileLoaded && (plan === "agency" || plan === "consulting") && (
+          <div style={{
+            padding: "20px 24px", borderRadius: 14, marginBottom: 16,
+            background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)",
+            border: "1px solid #FDE68A",
+            display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
+          }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>
+                Enterprise Plan
+              </div>
+              <div style={{ fontSize: 13, color: "#B45309" }}>
+                Manage all your business entities from your Agency Panel
+              </div>
+            </div>
+            <Link href="/agency" style={{
+              padding: "9px 18px", borderRadius: 9, background: "#F59E0B",
+              color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none",
+            }}>
+              Go to Agency Panel →
+            </Link>
+          </div>
+        )}
+
         {!hasScan ? (
           /* ── Empty state ── */
           <div style={{
@@ -1246,25 +1336,60 @@ export default function Dashboard() {
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>
                   {pendingScan!.domain}
                 </span>
-                <span style={{ fontSize: 12, color: "#9CA3AF" }}>· Just scanned</span>
+                <span style={{ fontSize: 12, color: "#9CA3AF" }}>· Last scan</span>
               </div>
               <button
-                onClick={canRescan ? () => setShowScan(true) : undefined}
-                disabled={!canRescan}
-                title={!canRescan ? `Sonraki tarama: ${daysUntilRescan} gün sonra` : undefined}
+                onClick={() => {
+                  if (!pendingScan) return;
+                  if (canRescan) {
+                    router.push(`/score?domain=${encodeURIComponent(pendingScan.domain)}`);
+                  } else {
+                    setShowRescanUpsell((v) => !v);
+                  }
+                }}
                 style={{
                   fontSize: 12, fontWeight: 600,
-                  color: canRescan ? "#2952E3" : "#9CA3AF",
-                  background: canRescan ? "rgba(41,82,227,0.06)" : "#F3F4F6",
-                  border: `1px solid ${canRescan ? "rgba(41,82,227,0.15)" : "#E5E7EB"}`,
+                  color: "#2952E3",
+                  background: "rgba(41,82,227,0.06)",
+                  border: "1px solid rgba(41,82,227,0.15)",
                   borderRadius: 8, padding: "6px 16px",
-                  cursor: canRescan ? "pointer" : "not-allowed",
+                  cursor: "pointer",
                   fontFamily: "var(--font-geist-sans)",
                 }}
               >
-                {canRescan ? "Rescan" : `${daysUntilRescan} gün sonra`}
+                Rescan
               </button>
             </div>
+
+            {/* Rescan upsell */}
+            {showRescanUpsell && !canRescan && (
+              <div style={{
+                padding: "16px 20px", borderRadius: 12,
+                background: "#FFFBEB", border: "1px solid #FDE68A",
+              }}>
+                <p style={{ fontSize: 13, color: "#92400E", lineHeight: 1.6, margin: "0 0 12px" }}>
+                  {plan === "free" ? (
+                    <>🚀 You&apos;ve used your free scan this month.<br /><strong>Upgrade to Starter</strong> for 2 scans/week + full insights — $29/mo</>
+                  ) : (
+                    <>You&apos;ve used your {weeklyLimit} scans this week.<br />Upgrade to Pro for 4 scans/week — $79/mo</>
+                  )}
+                </p>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={() => { setShowRescanUpsell(false); setUpgradeModal("More Scans"); }}
+                    style={{ padding: "8px 16px", borderRadius: 8, background: "#7C3AED", color: "#fff", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}
+                  >
+                    Upgrade Now
+                  </button>
+                  <button
+                    onClick={() => { setShowRescanUpsell(false); router.push(`/score?domain=${encodeURIComponent(pendingScan!.domain)}`); }}
+                    style={{ padding: "8px 16px", borderRadius: 8, background: "#fff", color: "#6B7280", fontSize: 12, fontWeight: 500, border: "1px solid #E5E7EB", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}
+                  >
+                    Continue anyway
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Score Trend */}
             <section style={{
@@ -1658,34 +1783,51 @@ export default function Dashboard() {
                 <div style={{ padding: "16px 24px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFA" }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Scan History</div>
                 </div>
-                {scanHistory.slice(0, 5).map((scan, i) => (
-                  <div key={scan.id} style={{
-                    display: "flex", alignItems: "center",
-                    padding: "12px 24px",
-                    borderBottom: i < Math.min(scanHistory.length, 5) - 1 ? "1px solid #F9FAFB" : "none",
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {scan.domain}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{fmtDate(scan.created_at)}</div>
-                    </div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: "#2952E3", letterSpacing: "-0.03em", margin: "0 20px", fontFamily: "var(--font-geist-sans)" }}>
-                      {scan.readiness_score ?? "—"}
-                    </div>
-                    <button
-                      onClick={() => router.push(`/score?domain=${encodeURIComponent(scan.domain)}`)}
-                      style={{
-                        fontSize: 12, fontWeight: 600, color: "#2952E3",
-                        background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
-                        borderRadius: 8, padding: "6px 14px", cursor: "pointer",
-                        fontFamily: "var(--font-geist-sans)", whiteSpace: "nowrap",
-                      }}
-                    >
-                      View →
-                    </button>
+                {plan === "free" ? (
+                  <div style={{ padding: "16px 24px" }}>
+                    <p style={{ fontSize: 13, color: "#374151", margin: "0 0 6px" }}>
+                      Last scan: <strong>{fmtDate(scanHistory[0].created_at)}</strong>
+                    </p>
+                    <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>
+                      Upgrade to Starter to see your full scan history.{" "}
+                      <button
+                        onClick={() => setUpgradeModal("Scan History")}
+                        style={{ fontSize: 12, color: "#7C3AED", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-geist-sans)", padding: 0, fontWeight: 600 }}
+                      >
+                        Upgrade →
+                      </button>
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  (plan === "starter" ? scanHistory.slice(0, 10) : scanHistory).map((scan, i, arr) => (
+                    <div key={scan.id} style={{
+                      display: "flex", alignItems: "center",
+                      padding: "12px 24px",
+                      borderBottom: i < arr.length - 1 ? "1px solid #F9FAFB" : "none",
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {scan.domain}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{fmtDate(scan.created_at)}</div>
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: "#2952E3", letterSpacing: "-0.03em", margin: "0 20px", fontFamily: "var(--font-geist-sans)" }}>
+                        {scan.readiness_score ?? "—"}
+                      </div>
+                      <button
+                        onClick={() => router.push(`/score?domain=${encodeURIComponent(scan.domain)}`)}
+                        style={{
+                          fontSize: 12, fontWeight: 600, color: "#2952E3",
+                          background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
+                          borderRadius: 8, padding: "6px 14px", cursor: "pointer",
+                          fontFamily: "var(--font-geist-sans)", whiteSpace: "nowrap",
+                        }}
+                      >
+                        View →
+                      </button>
+                    </div>
+                  ))
+                )}
               </section>
             )}
 

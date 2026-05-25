@@ -98,8 +98,8 @@ const plansData: PlanDef[] = [
     popular: false,
     audience: "For teams and power users.",
     features: [
-      { icon: "check", text: "3 domains" },
-      { icon: "check", text: "Unlimited scans" },
+      { icon: "check", text: "1 domain" },
+      { icon: "check", text: "4 scans per week" },
       { icon: "check", text: "Everything in Starter" },
       { icon: "check", text: "AI Influence Score (full)" },
       { icon: "check", text: "Growth Audit (multi-agent)" },
@@ -118,9 +118,9 @@ const plansData: PlanDef[] = [
     audience: "For multi-brand businesses & organizations.",
     features: [
       { icon: "check", text: "Up to 10 business entities" },
-      { icon: "check", text: "All Pro features per entity" },
-      { icon: "check", text: "Unified management dashboard" },
-      { icon: "check", text: "PDF reports for all entities" },
+      { icon: "check", text: "Pro features per entity" },
+      { icon: "check", text: "Unified agency dashboard" },
+      { icon: "check", text: "Weekly report per entity" },
       { icon: "check", text: "White-label option" },
       { icon: "check", text: "Custom pricing" },
     ],
@@ -146,8 +146,8 @@ function FeatureIcon({ icon, grad }: { icon: string; grad?: boolean }) {
 type CellValue = string | { text: string; muted?: boolean };
 
 const tableRows: { label: string; free: CellValue; starter: CellValue; pro: CellValue; agency: CellValue }[] = [
-  { label: "Domains",              free: "1",                                   starter: "1",                               pro: "3",                           agency: "10"                             },
-  { label: "Scan limit",           free: "1 per month",                         starter: "2 per week",                      pro: "Unlimited",                   agency: "Unlimited"                      },
+  { label: "Domains",              free: "1",                                   starter: "1",                               pro: "1",                           agency: "10"                             },
+  { label: "Scan limit",           free: "1 per month",                         starter: "2 per week",                      pro: "4 per week",                  agency: "Unlimited"                      },
   { label: "AI Readiness Score",   free: "✓",                                   starter: "Full detail",                     pro: "Full detail",                 agency: "Full detail"                    },
   { label: "AI Authority Score",   free: { text: "Number only", muted: true },  starter: "Full detail",                     pro: "Full detail",                 agency: "Full detail"                    },
   { label: "AI Influence Score",   free: { text: "Locked", muted: true },       starter: { text: "Locked", muted: true },   pro: "✓",                           agency: "✓"                              },

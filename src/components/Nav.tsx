@@ -12,6 +12,7 @@ export function Nav() {
   const [mobileSectorsOpen, setMobileSectorsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userPlan, setUserPlan] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -19,6 +20,11 @@ export function Nav() {
 
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
+      if (data.user) {
+        supabase.from("profiles").select("plan").eq("id", data.user.id).maybeSingle().then(({ data: p }) => {
+          setUserPlan(p?.plan ?? "free");
+        });
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -102,7 +108,7 @@ export function Nav() {
         <Link href="/" className="no-underline font-semibold" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
       </div>
       <div className="hidden md:flex items-center gap-3">
-        {mounted && user && <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Enterprise</Link>}
+        {mounted && user && (userPlan === "agency" || userPlan === "consulting") && <Link href="/agency" className="no-underline font-medium text-sm text-[var(--fg-2)]">Enterprise</Link>}
         {mounted && user && <Link href="/dashboard" className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>}
         {mounted && !user && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
         <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
@@ -165,7 +171,7 @@ export function Nav() {
           <Link href="/partner" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Partner</Link>
           <Link href="/" onClick={() => setOpen(false)} className="no-underline font-semibold text-sm" style={{ background: "var(--genessa-gradient)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>Get Score</Link>
           <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
-            {mounted && user && <Link href="/agency" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Agency</Link>}
+            {mounted && user && (userPlan === "agency" || userPlan === "consulting") && <Link href="/agency" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Enterprise</Link>}
             {mounted && user && <Link href="/dashboard" onClick={() => setOpen(false)} className="no-underline font-medium text-sm text-[var(--fg-2)]">Dashboard</Link>}
             {mounted && !user && <Link href="/auth/login" className="no-underline font-medium text-sm text-[var(--fg-2)]">Sign in</Link>}
             <Link href="/" className="no-underline text-sm font-medium px-3.5 py-2 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg)] text-[var(--fg)]">
