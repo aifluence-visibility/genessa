@@ -906,6 +906,14 @@ export default function Dashboard() {
     router.push(`/score?domain=${encodeURIComponent(domain)}`);
   }
 
+  function handleNewScanClick() {
+    if (profileLoaded && scanHistoryLoaded && !canRescan) {
+      setUpgradeModal("More Scans");
+      return;
+    }
+    setShowScan(true);
+  }
+
   async function handleDownloadReport() {
     if (!pendingScan || generating) return;
     setGenerating(true);
@@ -1051,7 +1059,7 @@ export default function Dashboard() {
             label="Dashboard" active
           />
           <NavItem
-            onClick={() => setShowScan(true)}
+            onClick={handleNewScanClick}
             icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>}
             label={copy?.scanLabel ?? "New scan"}
           />
@@ -1189,7 +1197,7 @@ export default function Dashboard() {
               </button>
             )}
             <button
-              onClick={() => setShowScan(true)}
+              onClick={handleNewScanClick}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 20px", borderRadius: 10,
@@ -1215,12 +1223,13 @@ export default function Dashboard() {
             <span style={{ fontSize: 13, color: "#92400E", fontWeight: 500 }}>
               You&apos;re on the <strong>Free plan</strong> — 1 scan per month · Limited insights
             </span>
-            <Link href="/pricing" style={{
+            <button onClick={() => setUpgradeModal("Starter Plan")} style={{
               padding: "7px 14px", borderRadius: 8, background: "#7C3AED",
-              color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none",
+              color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer",
+              border: "none", fontFamily: "var(--font-geist-sans)",
             }}>
               Upgrade to Starter →
-            </Link>
+            </button>
           </div>
         )}
         {profileLoaded && plan === "starter" && (
@@ -1300,7 +1309,7 @@ export default function Dashboard() {
               Run your first AI visibility scan to get your Readiness, Authority, and Influence scores — and a personalised action plan.
             </p>
             <button
-              onClick={() => setShowScan(true)}
+              onClick={handleNewScanClick}
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "13px 28px", borderRadius: 11,

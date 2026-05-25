@@ -143,9 +143,11 @@ export default function AdminRevenuePage() {
     saveRecords(updated);
   }
 
-  const free       = planDist.free ?? 0;
-  const starter    = planDist.starter ?? 0;
-  const pro        = planDist.pro ?? 0;
+  const free        = planDist.free ?? 0;
+  const starter     = planDist.starter ?? 0;
+  const pro         = planDist.pro ?? 0;
+  const agency      = planDist.agency ?? 0;
+  const consulting  = planDist.consulting ?? 0;
 
   const starterRevenue = starter * PLAN_PRICES.starter.monthly;
   const proRevenue     = pro     * PLAN_PRICES.pro.monthly;
@@ -157,11 +159,11 @@ export default function AdminRevenuePage() {
   const totalRevenue = starterRevenue + proRevenue + manualAgencyRevenue;
 
   const kpiCards = [
-    { label: "FREE USERS",   value: String(free),           hint: "$0/mo" },
-    { label: "STARTER USERS",value: String(starter),        hint: `$${starterRevenue}/mo @ $${PLAN_PRICES.starter.monthly}` },
-    { label: "PRO USERS",    value: String(pro),             hint: `$${proRevenue}/mo @ $${PLAN_PRICES.pro.monthly}` },
-    { label: "AGENCY + CONSULTING", value: `$${manualAgencyRevenue}`, hint: "From manual records" },
-    { label: "ESTIMATED REVENUE",   value: `$${totalRevenue}`,        hint: "Total MRR/mo" },
+    { label: "FREE USERS",          value: String(free),               hint: "$0/mo" },
+    { label: "STARTER USERS",       value: String(starter),            hint: `$${starterRevenue}/mo @ $${PLAN_PRICES.starter.monthly}` },
+    { label: "PRO USERS",           value: String(pro),                hint: `$${proRevenue}/mo @ $${PLAN_PRICES.pro.monthly}` },
+    { label: "AGENCY + CONSULTING", value: String(agency + consulting), hint: `$${manualAgencyRevenue} recorded` },
+    { label: "ESTIMATED REVENUE",   value: `$${totalRevenue}`,         hint: "Total MRR/mo" },
   ];
 
   return (

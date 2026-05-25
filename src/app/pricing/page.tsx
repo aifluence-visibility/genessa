@@ -147,7 +147,7 @@ type CellValue = string | { text: string; muted?: boolean };
 
 const tableRows: { label: string; free: CellValue; starter: CellValue; pro: CellValue; agency: CellValue }[] = [
   { label: "Domains",              free: "1",                                   starter: "1",                               pro: "1",                           agency: "10"                             },
-  { label: "Scan limit",           free: "1 per month",                         starter: "2 per week",                      pro: "4 per week",                  agency: "Unlimited"                      },
+  { label: "Scan limit",           free: "1 per month",                         starter: "2 per week",                      pro: "4 per week",                  agency: "4/week per entity"              },
   { label: "AI Readiness Score",   free: "✓",                                   starter: "Full detail",                     pro: "Full detail",                 agency: "Full detail"                    },
   { label: "AI Authority Score",   free: { text: "Number only", muted: true },  starter: "Full detail",                     pro: "Full detail",                 agency: "Full detail"                    },
   { label: "AI Influence Score",   free: { text: "Locked", muted: true },       starter: { text: "Locked", muted: true },   pro: "✓",                           agency: "✓"                              },

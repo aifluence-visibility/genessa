@@ -67,7 +67,7 @@ export default async function PipelinePage() {
   if (admin) {
     const [leadsRes, scansRes, profilesRes] = await Promise.all([
       admin.from("leads").select("id, domain, sector, email, score_snapshot, created_at").order("created_at", { ascending: false }),
-      admin.from("scans").select("domain, user_id, readiness_score, created_at").order("created_at", { ascending: false }),
+      admin.from("scans").select("domain, user_id, readiness_score, created_at").not("user_id", "is", null).order("created_at", { ascending: false }),
       admin.from("profiles").select("id, plan, sector, created_at"),
     ]);
 
