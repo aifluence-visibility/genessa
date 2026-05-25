@@ -23,15 +23,19 @@ type PlanDist = Record<Plan, number>;
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PLAN_COLORS: Record<Plan, string> = {
-  free: "#6B7280",
-  premium: "#8B5CF6",
-  agency: "#F59E0B",
+  free:       "#6B7280",
+  starter:    "#3B82F6",
+  pro:        "#8B5CF6",
+  agency:     "#F59E0B",
+  consulting: "#10B981",
 };
 
 const PLAN_BG: Record<Plan, string> = {
-  free: "rgba(107,114,128,0.15)",
-  premium: "rgba(139,92,246,0.15)",
-  agency: "rgba(245,158,11,0.15)",
+  free:       "rgba(107,114,128,0.15)",
+  starter:    "rgba(59,130,246,0.15)",
+  pro:        "rgba(139,92,246,0.15)",
+  agency:     "rgba(245,158,11,0.15)",
+  consulting: "rgba(16,185,129,0.15)",
 };
 
 // ─── Plan badge ───────────────────────────────────────────────────────────────
@@ -383,7 +387,7 @@ export default function AdminCustomersPage() {
   const [authed, setAuthed] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [scanStats, setScanStats] = useState<ScanStat[]>([]);
-  const [planDist, setPlanDist] = useState<PlanDist>({ free: 0, premium: 0, agency: 0 });
+  const [planDist, setPlanDist] = useState<PlanDist>({ free: 0, starter: 0, pro: 0, agency: 0, consulting: 0 });
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -411,7 +415,7 @@ export default function AdminCustomersPage() {
       };
       setUsers(ud.users ?? []);
       setScanStats(sd.scanStats ?? []);
-      setPlanDist(sd.planDist ?? { free: 0, premium: 0, agency: 0 });
+      setPlanDist(sd.planDist ?? { free: 0, starter: 0, pro: 0, agency: 0, consulting: 0 });
     } catch (err) {
       console.error("Admin data load failed:", err);
     } finally {
@@ -458,7 +462,7 @@ export default function AdminCustomersPage() {
   const today = new Date().toISOString().slice(0, 10);
   const todayScans = scanStats.find((s) => s.date === today)?.count ?? 0;
   const totalUsers = users.length;
-  const premiumUsers = users.filter((u) => u.plan === "premium").length;
+  const premiumUsers = users.filter((u) => u.plan === "starter" || u.plan === "pro").length;
   const agencyUsers = users.filter((u) => u.plan === "agency").length;
 
   const filtered = search

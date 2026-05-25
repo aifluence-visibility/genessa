@@ -15,12 +15,14 @@ type UserRecord = {
 };
 
 const PLAN_BG: Record<Plan, string> = {
-  free: "#F3F4F6",
-  premium: "#EDE9FE",
-  agency: "#FEF3C7",
+  free:       "#F3F4F6",
+  starter:    "#EFF6FF",
+  pro:        "#EDE9FE",
+  agency:     "#FEF3C7",
+  consulting: "#D1FAE5",
 };
 
-const PLANS: Plan[] = ["free", "premium", "agency"];
+const PLANS: Plan[] = ["free", "starter", "pro", "agency", "consulting"];
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -70,7 +72,7 @@ export default function AdminUsersPage() {
   );
 
   const totalCount = users.length;
-  const premiumCount = users.filter((u) => u.plan === "premium").length;
+  const premiumCount = users.filter((u) => u.plan === "starter" || u.plan === "pro").length;
   const agencyCount = users.filter((u) => u.plan === "agency").length;
 
   const kpiCards = [

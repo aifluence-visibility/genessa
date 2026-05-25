@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { generateReport } from "@/lib/generateReport";
-import { canAccess, getPlanLabel, getPlanColor, PLAN_LIMITS, type Plan } from "@/lib/plan";
+import { canAccess, getPlanLabel, getPlanColor, PLAN_LIMITS, normalizePlan, type Plan } from "@/lib/plan";
 
 interface PendingScan {
   domain: string;
@@ -591,55 +591,50 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
           <h2 style={{ fontSize: 20, fontWeight: 600, color: "#F9FAFB", marginBottom: 8, margin: "0 0 8px" }}>
-            Premium Özellik
+            Upgrade to unlock
           </h2>
           <p style={{ fontSize: 14, color: "#9CA3AF", lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: "#E5E7EB" }}>{feature}</strong> özelliği
-            Premium ve Agency planlarına dahildir.
+            <strong style={{ color: "#E5E7EB" }}>{feature}</strong> is available on Starter and Pro plans.
           </p>
         </div>
 
         {/* Plan comparison cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
-          {/* Premium */}
-          <div style={{
-            background: "#1F2937", border: "1px solid #8B5CF6",
-            borderRadius: 12, padding: 16, textAlign: "center",
-          }}>
-            <div style={{ fontSize: 11, color: "#8B5CF6", fontWeight: 600,
-                          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-              Premium
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          {/* Starter */}
+          <div style={{ background: "#1F2937", border: "1px solid #3B82F6", borderRadius: 12, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 11, color: "#3B82F6", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              Starter
             </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$19</div>
-            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/ay</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$29</div>
+            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/month</div>
+            <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
+              ✓ Full insights<br/>
+              ✓ Full checklist<br/>
+              ✓ Scan history<br/>
+              ✓ 2 scans/week
+            </div>
+          </div>
+          {/* Pro */}
+          <div style={{ background: "#1F2937", border: "1px solid #8B5CF6", borderRadius: 12, padding: 16, textAlign: "center" }}>
+            <div style={{ fontSize: 11, color: "#8B5CF6", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              Pro
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$79</div>
+            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/month</div>
             <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
               ✓ Growth Audit<br/>
               ✓ PDF Export<br/>
-              ✓ Tam checklist<br/>
-              ✓ 3 domain<br/>
-              ✓ Sınırsız scan
-            </div>
-          </div>
-          {/* Agency */}
-          <div style={{
-            background: "#1F2937", border: "1px solid #F59E0B",
-            borderRadius: 12, padding: 16, textAlign: "center",
-          }}>
-            <div style={{ fontSize: 11, color: "#F59E0B", fontWeight: 600,
-                          textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-              Agency
-            </div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#F9FAFB" }}>$149</div>
-            <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>/ay</div>
-            <div style={{ fontSize: 12, color: "#D1D5DB", textAlign: "left" }}>
-              ✓ Her şey dahil<br/>
-              ✓ 10 domain<br/>
-              ✓ White-label<br/>
-              ✓ Agency panel<br/>
-              ✓ Öncelikli destek
+              ✓ 3 domains<br/>
+              ✓ Unlimited scans
             </div>
           </div>
         </div>
+
+        {/* Agency line */}
+        <p style={{ fontSize: 12, color: "#4B5563", textAlign: "center", marginBottom: 16, margin: "0 0 16px" }}>
+          Need 10+ domains or white-label?{" "}
+          <a href="/contact" style={{ color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Contact us for Agency →</a>
+        </p>
 
         {/* CTA buttons */}
         <a
@@ -656,7 +651,7 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
             boxSizing: "border-box",
           }}
         >
-          💬 WhatsApp ile İletişime Geç
+          💬 Contact via WhatsApp
         </a>
         <button
           onClick={onClose}
@@ -668,7 +663,7 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
             fontFamily: "var(--font-geist-sans)",
           }}
         >
-          Şimdi Değil
+          Not now
         </button>
       </div>
     </div>
@@ -853,7 +848,7 @@ export default function Dashboard() {
       .maybeSingle()
       .then(({ data }) => {
         const s = (data?.sector as string | null) ?? null;
-        const p = (data?.plan as Plan) ?? "free";
+        const p = normalizePlan(data?.plan as string);
         setSector(s);
         setPlan(p);
         if (s === null) setShowSectorModal(true);
@@ -974,8 +969,11 @@ export default function Dashboard() {
 
   const lastScanDate = scanHistory.length > 0 ? new Date(scanHistory[0].created_at) : null;
   const daysSinceLastScan = lastScanDate ? (Date.now() - lastScanDate.getTime()) / (1000 * 60 * 60 * 24) : null;
-  const scanIntervalDays = PLAN_LIMITS[plan].scanIntervalDays as number;
-  const canRescan = daysSinceLastScan === null || daysSinceLastScan >= scanIntervalDays;
+  // free: 1/month (30d), starter: 2/week (3.5d), pro/agency/consulting: unlimited (0d)
+  const scanIntervalDays = (PLAN_LIMITS[plan].unlimitedScans as boolean) ? 0
+    : plan === "starter" ? 3.5
+    : 30;
+  const canRescan = scanIntervalDays === 0 || daysSinceLastScan === null || daysSinceLastScan >= scanIntervalDays;
   const daysUntilRescan = !canRescan && daysSinceLastScan !== null ? Math.ceil(scanIntervalDays - daysSinceLastScan) : 0;
 
   return (
