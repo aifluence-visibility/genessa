@@ -31,7 +31,13 @@ interface AgencyDomain {
   id: string;
   domain: string;
   sector: string | null;
-  last_score: number | null;
+  nickname: string | null;
+  lastScan?: {
+    readiness_score: number | null;
+    authority_score: number | null;
+    influence_score: number | null;
+    created_at: string;
+  } | null;
 }
 
 // ─── Animated counter ──────────────────────────────────────────────────────────
@@ -424,6 +430,24 @@ function fmtDate(iso: string) {
   }
 }
 
+function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  } catch { return "—"; }
+}
+function scoreColor(score: number | null | undefined): string {
+  if (score === null || score === undefined) return "#9CA3AF";
+  if (score <= 40) return "#DC2626";
+  if (score <= 70) return "#D97706";
+  return "#16A34A";
+}
+function scoreBg(score: number | null | undefined): string {
+  if (score === null || score === undefined) return "#F3F4F6";
+  if (score <= 40) return "#FEF2F2";
+  if (score <= 70) return "#FFFBEB";
+  return "#F0FDF4";
+}
+
 function TrendChart({ scans }: { scans: ScanRecord[] }) {
   const pts_raw = [...scans].slice(0, 5).reverse();
   const VW = 500, VH = 130;
@@ -776,6 +800,11 @@ export default function Dashboard() {
   const [scanHistoryLoaded, setScanHistoryLoaded] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [agencyDomains, setAgencyDomains] = useState<AgencyDomain[]>([]);
+  const [addingEntity, setAddingEntity] = useState(false);
+  const [newEntityDomain, setNewEntityDomain] = useState("");
+  const [newEntityNickname, setNewEntityNickname] = useState("");
+  const [newEntitySector, setNewEntitySector] = useState("other");
+  const [savingEntity, setSavingEntity] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -865,14 +894,8 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user || !profileLoaded) return;
     if (plan !== "agency" && plan !== "consulting") return;
-    const supabase = createSupabaseBrowserClient();
-    supabase
-      .from("agency_domains")
-      .select("id, domain, sector, last_score")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        if (data) setAgencyDomains(data as AgencyDomain[]);
-      });
+    loadAgencyDomains();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, plan, profileLoaded]);
 
   // Handle ?rescan=domain URL param
@@ -894,6 +917,73 @@ export default function Dashboard() {
       .upsert({ id: user!.id, sector: selectedSector }, { onConflict: "id" });
     setSector(selectedSector);
     setShowSectorModal(false);
+  }
+
+  async function loadAgencyDomains() {
+    if (!user) return;
+    const supabase = createSupabaseBrowserClient();
+    const { data: domainRows } = await supabase
+      .from("agency_domains")
+      .select("id, domain, sector, nickname, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+
+    if (!domainRows || domainRows.length === 0) {
+      setAgencyDomains([]);
+      return;
+    }
+
+    const domainNames = domainRows.map((r) => r.domain as string);
+    const { data: scanRows } = await supabase
+      .from("scans")
+      .select("domain, readiness_score, authority_score, influence_score, created_at")
+      .eq("user_id", user.id)
+      .in("domain", domainNames)
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    const latestScan: Record<string, { readiness_score: number | null; authority_score: number | null; influence_score: number | null; created_at: string }> = {};
+    for (const s of scanRows ?? []) {
+      const d = s.domain as string;
+      if (!latestScan[d]) {
+        latestScan[d] = {
+          readiness_score: s.readiness_score as number | null,
+          authority_score: s.authority_score as number | null,
+          influence_score: s.influence_score as number | null,
+          created_at: s.created_at as string,
+        };
+      }
+    }
+
+    setAgencyDomains(
+      domainRows.map((r) => ({
+        id: r.id as string,
+        domain: r.domain as string,
+        sector: r.sector as string | null,
+        nickname: r.nickname as string | null,
+        lastScan: latestScan[r.domain as string] ?? null,
+      }))
+    );
+  }
+
+  async function handleAddEntity() {
+    if (!user || savingEntity) return;
+    const trimmed = newEntityDomain.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (!trimmed || agencyDomains.length >= 10) return;
+    setSavingEntity(true);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.from("agency_domains").insert({
+      user_id: user.id,
+      domain: trimmed,
+      sector: newEntitySector || "other",
+      nickname: newEntityNickname.trim() || null,
+    });
+    setNewEntityDomain("");
+    setNewEntityNickname("");
+    setNewEntitySector("other");
+    setAddingEntity(false);
+    setSavingEntity(false);
+    await loadAgencyDomains();
   }
 
   async function handleSignOut() {
@@ -1021,22 +1111,6 @@ export default function Dashboard() {
             }}>
               {getPlanLabel(plan)}
             </span>
-            {plan === "agency" && (
-              <Link
-                href="/agency"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  padding: "6px 12px", borderRadius: 8,
-                  fontSize: 12, fontWeight: 600,
-                  background: "#FFFBEB",
-                  color: "#F59E0B",
-                  border: "1px solid #FDE68A",
-                  textDecoration: "none",
-                }}
-              >
-                Agency Panel →
-              </Link>
-            )}
             <button
               onClick={handleNewScanClick}
               style={{
@@ -1104,25 +1178,18 @@ export default function Dashboard() {
         {profileLoaded && (plan === "agency" || plan === "consulting") && (
           <>
             <div style={{
-              padding: "20px 24px", borderRadius: 14, marginBottom: 16,
+              padding: "14px 20px", borderRadius: 12, marginBottom: 16,
               background: "linear-gradient(135deg, #FFFBEB, #FEF3C7)",
               border: "1px solid #FDE68A",
-              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14,
+              display: "flex", alignItems: "center", gap: 10,
             }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>
-                  Enterprise Plan
-                </div>
-                <div style={{ fontSize: 13, color: "#B45309" }}>
-                  Manage all your business entities from your Agency Panel
-                </div>
-              </div>
-              <Link href="/agency" style={{
-                padding: "9px 18px", borderRadius: 9, background: "#F59E0B",
-                color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none",
-              }}>
-                Go to Agency Panel →
-              </Link>
+              <span style={{ fontSize: 16 }}>🏢</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#92400E" }}>
+                Enterprise Plan
+              </span>
+              <span style={{ fontSize: 13, color: "#B45309" }}>
+                · {agencyDomains.length} {agencyDomains.length === 1 ? "entity" : "entities"} · Unlimited scans
+              </span>
             </div>
 
             {/* My Entities */}
@@ -1131,63 +1198,173 @@ export default function Dashboard() {
               background: "#fff", border: "1px solid #E5E7EB",
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
             }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>My Entities</div>
                   <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Businesses under your account</div>
                 </div>
-                <Link href="/agency" style={{
-                  fontSize: 12, fontWeight: 600, color: "#F59E0B",
-                  textDecoration: "none", padding: "5px 12px", borderRadius: 7,
-                  background: "#FFFBEB", border: "1px solid #FDE68A",
-                }}>
-                  Agency Panel →
-                </Link>
+                <button
+                  onClick={() => setAddingEntity(true)}
+                  disabled={agencyDomains.length >= 10}
+                  style={{
+                    fontSize: 12, fontWeight: 600, padding: "6px 14px", borderRadius: 8,
+                    background: agencyDomains.length >= 10 ? "#F3F4F6" : "linear-gradient(135deg, #2952E3, #7B3FE4)",
+                    color: agencyDomains.length >= 10 ? "#9CA3AF" : "#fff",
+                    border: "none", cursor: agencyDomains.length >= 10 ? "not-allowed" : "pointer",
+                    fontFamily: "var(--font-geist-sans)",
+                  }}
+                >
+                  + Add Entity
+                </button>
               </div>
-              {agencyDomains.length === 0 ? (
+
+              {/* Inline add form */}
+              {addingEntity && (
+                <div style={{
+                  background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 12,
+                  padding: "14px 16px", marginBottom: 14,
+                  display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end",
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+                      Domain *
+                    </label>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="example.com"
+                      value={newEntityDomain}
+                      onChange={(e) => setNewEntityDomain(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleAddEntity(); }}
+                      style={{ padding: "7px 10px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff", color: "#111827", outline: "none", width: 180, fontFamily: "var(--font-geist-sans)" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+                      Name (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Client name"
+                      value={newEntityNickname}
+                      onChange={(e) => setNewEntityNickname(e.target.value)}
+                      style={{ padding: "7px 10px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff", color: "#111827", outline: "none", width: 150, fontFamily: "var(--font-geist-sans)" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <label style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>
+                      Sector
+                    </label>
+                    <select
+                      value={newEntitySector}
+                      onChange={(e) => setNewEntitySector(e.target.value)}
+                      style={{ padding: "7px 10px", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff", color: "#111827", outline: "none", width: 140, fontFamily: "var(--font-geist-sans)", cursor: "pointer" }}
+                    >
+                      {SECTORS.map((s) => (
+                        <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={handleAddEntity}
+                      disabled={savingEntity || !newEntityDomain.trim()}
+                      style={{
+                        padding: "7px 18px", fontSize: 12, fontWeight: 600, borderRadius: 8, border: "none",
+                        background: savingEntity || !newEntityDomain.trim() ? "#F3F4F6" : "linear-gradient(135deg, #2952E3, #7B3FE4)",
+                        color: savingEntity || !newEntityDomain.trim() ? "#9CA3AF" : "#fff",
+                        cursor: savingEntity || !newEntityDomain.trim() ? "not-allowed" : "pointer",
+                        fontFamily: "var(--font-geist-sans)",
+                      }}
+                    >
+                      {savingEntity ? "Adding…" : "Add"}
+                    </button>
+                    <button
+                      onClick={() => { setAddingEntity(false); setNewEntityDomain(""); setNewEntityNickname(""); setNewEntitySector("other"); }}
+                      style={{ padding: "7px 14px", fontSize: 12, fontWeight: 500, borderRadius: 8, border: "1px solid #E5E7EB", background: "#fff", color: "#6B7280", cursor: "pointer", fontFamily: "var(--font-geist-sans)" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {agencyDomains.length === 0 && !addingEntity ? (
                 <div style={{ padding: "24px 0", textAlign: "center" }}>
                   <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
-                    No entities yet. Add businesses from the Agency Panel.
+                    No entities yet. Click &ldquo;+ Add Entity&rdquo; to get started.
                   </p>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
                   {agencyDomains.map((entity) => (
                     <div key={entity.id} style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "12px 16px", borderRadius: 10,
-                      background: "#F8F9FC", border: "1px solid #E5E7EB",
+                      background: "#F8F9FC", border: "1px solid #E5E7EB", borderRadius: 12,
+                      padding: "16px 16px 14px", display: "flex", flexDirection: "column",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 18 }}>
-                          {SECTOR_EMOJI[entity.sector ?? "other"] ?? "🔧"}
-                        </span>
-                        <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{entity.domain}</div>
-                          <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
-                            Last score: {entity.last_score != null ? entity.last_score : "—"}
-                          </div>
+                      {/* Header */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                        <span style={{ fontSize: 16 }}>{SECTOR_EMOJI[entity.sector ?? "other"] ?? "🔧"}</span>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {entity.nickname || entity.domain}
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <Link href="/agency" style={{
-                          fontSize: 11, fontWeight: 600, color: "#6B7280",
-                          textDecoration: "none", padding: "5px 10px", borderRadius: 7,
-                          background: "#fff", border: "1px solid #E5E7EB",
-                        }}>
-                          View Details
-                        </Link>
+                      {/* Domain + sector */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                        {entity.nickname && (
+                          <div style={{ fontSize: 11, color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {entity.domain}
+                          </div>
+                        )}
+                        <div style={{ fontSize: 10, color: "#6B7280", marginLeft: "auto" }}>
+                          {SECTORS.find(s => s.key === entity.sector)?.label ?? "Other"}
+                        </div>
+                      </div>
+                      {/* Scores */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5, padding: "10px 12px", background: "#fff", borderRadius: 8, border: "1px solid #F3F4F6", marginBottom: 10 }}>
+                        {[
+                          { label: "Readiness", score: entity.lastScan?.readiness_score },
+                          { label: "Authority",  score: entity.lastScan?.authority_score },
+                          { label: "Influence",  score: entity.lastScan?.influence_score },
+                        ].map(({ label, score }) => (
+                          <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: 11, color: "#6B7280" }}>{label}</span>
+                            <span style={{
+                              fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 999,
+                              background: scoreBg(score), color: scoreColor(score),
+                              fontFamily: "var(--font-geist-mono)",
+                            }}>
+                              {score != null ? score : "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Last scan */}
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 12 }}>
+                        Last scan: {entity.lastScan ? formatDate(entity.lastScan.created_at) : "Never scanned"}
+                      </div>
+                      {/* Actions */}
+                      <div style={{ display: "flex", gap: 7, marginTop: "auto" }}>
                         <button
-                          onClick={() => router.push(`/score?domain=${encodeURIComponent(entity.domain)}`)}
+                          onClick={() => router.push(`/score?domain=${encodeURIComponent(entity.domain)}${entity.sector ? `&sector=${entity.sector}` : ""}`)}
                           style={{
-                            fontSize: 11, fontWeight: 600, color: "#2952E3",
-                            padding: "5px 10px", borderRadius: 7,
-                            background: "rgba(41,82,227,0.06)", border: "1px solid rgba(41,82,227,0.15)",
+                            flex: 1, padding: "7px 0", fontSize: 11, fontWeight: 600, borderRadius: 7, border: "none",
+                            background: "linear-gradient(135deg, #2952E3, #7B3FE4)", color: "#fff",
                             cursor: "pointer", fontFamily: "var(--font-geist-sans)",
                           }}
                         >
-                          Run Scan
+                          🔍 Scan
                         </button>
+                        <Link
+                          href={`/dashboard/entity/${encodeURIComponent(entity.domain)}`}
+                          style={{
+                            flex: 1, padding: "7px 0", fontSize: 11, fontWeight: 600, borderRadius: 7,
+                            border: "1px solid #DDD6FE", background: "#F5F3FF", color: "#7C3AED",
+                            textDecoration: "none", textAlign: "center" as const,
+                          }}
+                        >
+                          📊 View Report
+                        </Link>
                       </div>
                     </div>
                   ))}
