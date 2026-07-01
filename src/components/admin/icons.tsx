@@ -227,6 +227,19 @@ export function AdminNavIconGlyph({
           <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
         </svg>
       );
+    case "organizations":
+      return (
+        <svg className={c} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M9 10h.01M12 10h.01M15 10h.01M9 14h.01M15 14h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      );
     default:
       return null;
   }

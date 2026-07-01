@@ -42,6 +42,8 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
   const [
     engagementsRes,
     openApprovalsRes,
@@ -56,6 +58,10 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
     agentFinished24hRes,
     paidUsersRes,
     todayScansRes,
+    orgsRes,
+    engineRunsWeekRes,
+    engineScoresWeekRes,
+    pendingPromptsRes,
   ] = await Promise.all([
     supabase.from("engagements").select("client_account_id,metadata").eq("status", "active").is("deleted_at", null),
     supabase.from("approval_requests").select("id", { count: "exact", head: true }).eq("status", "open"),
@@ -104,6 +110,25 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
       .from("scans")
       .select("id", { count: "exact", head: true })
       .gte("created_at", todayStart.toISOString()),
+    // V2: organizations
+    supabase.from("organizations").select("id", { count: "exact", head: true }),
+    // V2: engine runs this week (completed)
+    supabase
+      .from("engine_runs")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "completed")
+      .gte("run_timestamp", weekAgo),
+    // V2: engine_scores rows this week
+    supabase
+      .from("engine_scores")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", weekAgo),
+    // V2: prompts awaiting user approval
+    supabase
+      .from("engine_prompts")
+      .select("id", { count: "exact", head: true })
+      .eq("is_user_approved", false)
+      .eq("is_active", true),
   ]);
 
   const engagementRows = engagementsRes.data ?? [];
@@ -162,6 +187,10 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
   const agentFinished24h = agentFinished24hRes.count ?? 0;
   const paidUsers = paidUsersRes.count ?? 0;
   const todayScans = todayScansRes.count ?? 0;
+  const orgsTotal = orgsRes.count ?? 0;
+  const engineRunsWeek = engineRunsWeekRes.count ?? 0;
+  const engineScoresWeek = engineScoresWeekRes.count ?? 0;
+  const pendingPrompts = pendingPromptsRes.count ?? 0;
 
   const stats: DashboardStat[] = [
     { label: "Active clients", value: String(activeClientCount), hint: "Distinct clients with an active engagement" },
@@ -194,6 +223,10 @@ export async function getAdminDashboardData(): Promise<DashboardPayload> {
     },
     { label: "PREMIUM USERS", value: String(paidUsers), hint: "Active paid accounts" },
     { label: "TODAY'S SCANS", value: String(todayScans), hint: "Last 24 hours" },
+    { label: "ORGANIZATIONS", value: String(orgsTotal), hint: "Total V2 orgs" },
+    { label: "ENGINE RUNS · 7D", value: String(engineRunsWeek), hint: "Completed runs this week" },
+    { label: "ENGINE SCORES · 7D", value: String(engineScoresWeek), hint: "Aggregated score rows" },
+    { label: "PENDING PROMPTS", value: String(pendingPrompts), hint: "Awaiting user approval" },
   ];
 
   return { source: "database", stats, recentActivity, auditsPreview };

@@ -130,7 +130,7 @@ export default async function PipelinePage() {
   }
 
   const waMessage = (domain: string, score: number | null) =>
-    `https://wa.me/90525788737?text=${encodeURIComponent(`Hi! Your AI visibility score is ${score ?? "?"}/100. You're one step away from unlocking Growth Audit and full optimization. Want to upgrade to Premium?`)}`;
+    `https://wa.me/905325788737?text=${encodeURIComponent(`Hi! Your AI visibility score is ${score ?? "?"}/100. You're one step away from unlocking Growth Audit and full optimization. Want to upgrade to Premium?`)}`;
 
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });

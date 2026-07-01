@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { canAccess, getPlanLabel, getPlanColor, PLAN_LIMITS, normalizePlan, type Plan } from "@/lib/plan";
+import EngineScoresPanel from "@/components/dashboard/EngineScoresPanel";
 
 interface PendingScan {
   domain: string;
@@ -578,7 +579,7 @@ function UpgradeModal({ feature, onClose }: UpgradeModalProps) {
   const whatsappMessage = encodeURIComponent(
     `Hi! I'm interested in upgrading my Genessa plan to access "${feature}". Could you share the details?`
   );
-  const whatsappUrl = `https://wa.me/90525788737?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/905325788737?text=${whatsappMessage}`;
 
   return (
     <div
@@ -1175,6 +1176,9 @@ export default function Dashboard() {
             </span>
           </div>
         )}
+        {/* ── Engine Scores Panel (V2) ── */}
+        <EngineScoresPanel />
+
         {profileLoaded && (plan === "agency" || plan === "consulting") && (
           <>
             <div style={{

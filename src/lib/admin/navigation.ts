@@ -17,7 +17,8 @@ export type AdminNavIcon =
   | "agents"
   | "agent_runs"
   | "reports"
-  | "approvals";
+  | "approvals"
+  | "organizations";
 
 export type AdminNavItem = {
   href: string;
@@ -35,4 +36,5 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin/marketing", label: "Marketing", icon: "marketing" },
   { href: "/admin/visibility", label: "AI Visibility", icon: "visibility" },
   { href: "/admin/agents", label: "Agents", icon: "agents" },
+  { href: "/admin/organizations", label: "Organizations", icon: "organizations" },
 ];

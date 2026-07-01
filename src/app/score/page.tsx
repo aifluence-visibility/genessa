@@ -259,17 +259,25 @@ function ScoreAuditView({ rawUrl }: { rawUrl: string }) {
                 <div className="text-[13px] text-[var(--fg-3)] mt-2">Semantic authority signals</div>
               </div>
 
-              {/* AI Influence — premium locked */}
-              <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-subtle)] p-4 md:p-5">
-                <div className="eyebrow mb-3" style={{ opacity: 0.5 }}>AI Influence</div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-3)]">Premium</span>
+              {/* AI Mention Tracking — V2 */}
+              <div className="rounded-[14px] p-4 md:p-5"
+                style={{
+                  background: "linear-gradient(var(--bg),var(--bg)) padding-box, var(--genessa-gradient) border-box",
+                  border: "1.5px solid transparent",
+                }}>
+                <div className="eyebrow mb-3">AI Mention Tracking</div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "var(--genessa-gradient)", display: "inline-block" }} />
+                  <span className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--genessa-blue)" }}>Analysis in progress</span>
                 </div>
-                <div className="text-[13px] text-[var(--fg-3)] mt-2">AI mention tracking</div>
+                <div className="text-[13px] text-[var(--fg-2)] mb-3 leading-relaxed">
+                  Track where your brand appears across Claude, GPT-4o &amp; Perplexity — and how you compare to competitors.
+                </div>
+                <Link href="/onboarding"
+                  className="no-underline text-[12px] font-semibold px-3 py-1.5 rounded-[8px] text-white inline-block"
+                  style={{ background: "var(--genessa-gradient)" }}>
+                  Start tracking →
+                </Link>
               </div>
             </div>
 

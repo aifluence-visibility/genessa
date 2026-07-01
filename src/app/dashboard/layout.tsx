@@ -7,7 +7,7 @@ import { normalizePlan, type Plan } from "@/lib/plan";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 
 function UpgradeModal({ onClose }: { onClose: () => void }) {
-  const waLink = `https://wa.me/90525788737?text=${encodeURIComponent(
+  const waLink = `https://wa.me/905325788737?text=${encodeURIComponent(
     "Hi! I'm interested in upgrading my Genessa plan. Could you share the details?"
   )}`;
 

@@ -42,3 +42,4 @@ next-env.d.ts
 
 # generated SQL bundle (local convenience)
 supabase/_bundle_stage1.sql
+.env*.local

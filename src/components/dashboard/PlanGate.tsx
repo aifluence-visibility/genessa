@@ -21,7 +21,7 @@ const PLAN_ORDER: Record<Plan, number> = {
 };
 
 function UpgradeModal({ onClose, requiredPlan, featureName }: { onClose: () => void; requiredPlan: "starter" | "pro"; featureName: string }) {
-  const waLink = `https://wa.me/90525788737?text=${encodeURIComponent(
+  const waLink = `https://wa.me/905325788737?text=${encodeURIComponent(
     `Hi! I'm interested in upgrading to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} to access ${featureName} on Genessa.`
   )}`;
 
@@ -123,7 +123,7 @@ export default function PlanGate({ requiredPlan, currentPlan, featureName, featu
     }
   }
 
-  const waLink = `https://wa.me/90525788737?text=${encodeURIComponent(
+  const waLink = `https://wa.me/905325788737?text=${encodeURIComponent(
     `Hi! I'm interested in upgrading to ${requiredPlan.charAt(0).toUpperCase() + requiredPlan.slice(1)} to access ${featureName}.`
   )}`;
 

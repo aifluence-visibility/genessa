@@ -16,11 +16,16 @@ const SECTORS = [
   { key: "other",      emoji: "🔧", name: "Other" },
 ];
 
+const WA_BUY_MORE = `https://wa.me/905325788737?text=${encodeURIComponent("Hi! I'd like to buy more AI visibility tour credits.")}`;
+
 export default function SettingsPage() {
   const [email, setEmail] = useState<string | null>(null);
   const [plan, setPlan] = useState<Plan>("free");
   const [sector, setSector] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [targetLocale, setTargetLocale] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [sectorSaving, setSectorSaving] = useState(false);
   const [sectorSaved, setSectorSaved] = useState(false);
@@ -28,20 +33,33 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) { router.replace("/auth/login"); return; }
       setEmail(data.user.email ?? null);
       setUserId(data.user.id);
-      supabase
+
+      const { data: profile } = await supabase
         .from("profiles")
-        .select("plan, sector")
+        .select("plan, sector, organization_id, onboarding_locale, domain")
         .eq("id", data.user.id)
-        .maybeSingle()
-        .then(({ data: profile }) => {
-          setPlan(normalizePlan(profile?.plan as string));
-          setSector((profile?.sector as string | null) ?? null);
-          setReady(true);
-        });
+        .maybeSingle();
+
+      setPlan(normalizePlan(profile?.plan as string));
+      setSector((profile?.sector as string | null) ?? null);
+      setDomain((profile?.domain as string | null) ?? null);
+      setTargetLocale((profile?.onboarding_locale as string | null) ?? null);
+
+      const orgId = profile?.organization_id as string | null;
+      if (orgId) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("extra_query_credits")
+          .eq("id", orgId)
+          .maybeSingle();
+        setCredits((org?.extra_query_credits as number | null) ?? 0);
+      }
+
+      setReady(true);
     });
   }, [router]);
 
@@ -91,23 +109,83 @@ export default function SettingsPage() {
           <div style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 14 }}>
             Account
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Email</div>
-            <div style={{ fontSize: 14, color: "#374151", fontWeight: 500 }}>{email ?? "—"}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Plan</div>
-            <span style={{
-              display: "inline-flex", alignItems: "center",
-              padding: "3px 10px", borderRadius: 20,
-              fontSize: 12, fontWeight: 600,
-              background: planColor + "22", color: planColor,
-              border: `1px solid ${planColor}44`,
-            }}>
-              {planLabel}
-            </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Email</div>
+              <div style={{ fontSize: 14, color: "#374151", fontWeight: 500 }}>{email ?? "—"}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Plan</div>
+              <span style={{
+                display: "inline-flex", alignItems: "center",
+                padding: "3px 10px", borderRadius: 20,
+                fontSize: 12, fontWeight: 600,
+                background: planColor + "22", color: planColor,
+                border: `1px solid ${planColor}44`,
+              }}>
+                {planLabel}
+              </span>
+            </div>
+            {domain && (
+              <div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Tracked domain</div>
+                <div style={{ fontSize: 14, color: "#374151", fontWeight: 500, fontFamily: "var(--font-geist-mono)" }}>{domain}</div>
+              </div>
+            )}
+            {targetLocale && (
+              <div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Target locale</div>
+                <div style={{ fontSize: 13, color: "#374151", fontFamily: "var(--font-geist-mono)" }}>{targetLocale}</div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* AI Visibility Credits */}
+        {credits !== null && (
+          <div style={{
+            padding: "20px 24px", borderRadius: 14,
+            background: credits === 0 ? "#FFFBEB" : "#F0FDF4",
+            border: `1px solid ${credits === 0 ? "#FDE68A" : "#BBF7D0"}`,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 14 }}>
+              AI Visibility Credits
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <div>
+                <div style={{
+                  fontSize: 32, fontWeight: 700, letterSpacing: "-0.04em",
+                  color: credits === 0 ? "#92400E" : "#15803D",
+                }}>
+                  {credits}
+                </div>
+                <div style={{ fontSize: 12, color: credits === 0 ? "#B45309" : "#166534", marginTop: 2 }}>
+                  {credits === 0
+                    ? "No credits — buy a tour to run fresh engine queries"
+                    : `${credits} tour credit${credits !== 1 ? "s" : ""} remaining`}
+                </div>
+              </div>
+              <a
+                href={WA_BUY_MORE}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flexShrink: 0,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "9px 18px", borderRadius: 9,
+                  background: "linear-gradient(135deg, #2952E3, #7B3FE4)",
+                  color: "#fff", fontSize: 12, fontWeight: 600,
+                  textDecoration: "none", whiteSpace: "nowrap",
+                }}
+              >
+                {credits === 0 ? "Buy a tour →" : "Buy more →"}
+              </a>
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11, color: "#9CA3AF" }}>
+              Each tour runs your prompts through Claude, GPT-4o &amp; Perplexity — 3× each. Credits added within 24h via WhatsApp.
+            </div>
+          </div>
+        )}
 
         {/* Sector selection */}
         <div style={{

@@ -15,6 +15,9 @@ type NavItemDef = {
 
 const NAV_ITEMS: NavItemDef[] = [
   { href: "/dashboard",             label: "Overview",      icon: "📊", plans: ["free","starter","pro","agency","consulting"] },
+  { href: "/dashboard/visibility",  label: "AI Visibility", icon: "🔭", plans: ["free","starter","pro","agency","consulting"] },
+  { href: "/dashboard/prompts",     label: "Prompts",       icon: "💬", plans: ["free","starter","pro","agency","consulting"] },
+  { href: "/dashboard/competitors", label: "Competitors",   icon: "🏁", plans: ["free","starter","pro","agency","consulting"] },
   { href: "/dashboard/readiness",   label: "AI Readiness",  icon: "🔍", plans: ["free","starter","pro","agency","consulting"] },
   { href: "/dashboard/authority",   label: "AI Authority",  icon: "🏆", plans: ["starter","pro","agency","consulting"], lockLabel: "Starter+" },
   { href: "/dashboard/influence",   label: "AI Influence",  icon: "📣", plans: ["pro","agency","consulting"], lockLabel: "Pro+" },
