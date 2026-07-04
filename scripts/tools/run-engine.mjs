@@ -112,7 +112,7 @@ export async function runEngine(engine, promptText, creds) {
 
   if (engine === "perplexity") {
     if (!creds.perplexityKey) return { error: "missing_perplexity_key" };
-    const model = creds.models?.perplexity ?? "llama-3.1-sonar-small-128k-online";
+    const model = creds.models?.perplexity ?? "sonar";
     return runOpenAICompatible(promptText, creds.perplexityKey, model, "https://api.perplexity.ai", timeoutMs);
   }
 
@@ -128,7 +128,7 @@ export function getEngineCredentials() {
     models: {
       claude: process.env.ENGINE_CLAUDE_MODEL?.trim() || "claude-haiku-4-5-20251001",
       gpt: process.env.ENGINE_GPT_MODEL?.trim() || "gpt-4o-mini",
-      perplexity: process.env.ENGINE_PERPLEXITY_MODEL?.trim() || "llama-3.1-sonar-small-128k-online",
+      perplexity: process.env.ENGINE_PERPLEXITY_MODEL?.trim() || "sonar",
     },
     timeoutMs: Math.min(
       Math.max(parseInt(process.env.ENGINE_TIMEOUT_MS ?? "30000", 10) || 30_000, 5_000),
