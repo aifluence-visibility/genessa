@@ -18,7 +18,8 @@
     "aggregate:competitors": "node scripts/competitor-aggregate.mjs",
     "analyse:content-gap": "node scripts/content-gap.mjs",
     "score:unified": "node scripts/score-unified.mjs",
-    "generate:action-plan": "node scripts/action-plan.mjs"
+    "generate:action-plan": "node scripts/action-plan.mjs",
+    "generate:report": "node scripts/assemble-report.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

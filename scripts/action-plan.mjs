@@ -233,7 +233,7 @@ export async function buildActionPlan({ orgId, reportId, days = 30, supabase, an
 
   let plan;
   try {
-    const cleaned = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+    const cleaned = raw.replace(/```(?:json)?/g, "").trim();
     plan = JSON.parse(cleaned);
   } catch {
     console.error("[action-plan] JSON parse failed:", raw.slice(0, 300));

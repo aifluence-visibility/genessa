@@ -201,8 +201,7 @@ Return JSON:
   const raw = await callClaude(SYSTEM_PROMPT, userMessage, anthropicKey);
 
   try {
-    // Strip any accidental markdown fences
-    const cleaned = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```$/m, "").trim();
+    const cleaned = raw.replace(/```(?:json)?/g, "").trim();
     return JSON.parse(cleaned);
   } catch {
     console.error("[content-gap] JSON parse failed, raw:", raw.slice(0, 300));
