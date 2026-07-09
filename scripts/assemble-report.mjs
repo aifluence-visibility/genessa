@@ -145,7 +145,7 @@ function renderActionPlanSection(plan) {
   return `${phases}${projection}`;
 }
 
-function renderHTML({ domain, unifiedScore, grade, technicalScan, competitor, contentGap, actionPlan, generatedAt }) {
+function renderHTML({ domain, unifiedScore, grade, subScores, technicalScan, competitor, contentGap, actionPlan, generatedAt }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -274,17 +274,17 @@ function renderHTML({ domain, unifiedScore, grade, technicalScan, competitor, co
     <div class="sub-scores">
       <div class="sub-card">
         <div class="label">Technical</div>
-        <div class="value">${technicalScan?.technical_score ?? "—"}</div>
+        <div class="value">${subScores?.technical?.score ?? "—"}</div>
         <div class="weight">30% weight</div>
       </div>
       <div class="sub-card">
         <div class="label">Citation Rate</div>
-        <div class="value">${unifiedScore != null && technicalScan?.technical_score != null ? "see below" : "—"}</div>
+        <div class="value">${subScores?.citation?.score != null ? subScores.citation.score + "%" : "—"}</div>
         <div class="weight">40% weight</div>
       </div>
       <div class="sub-card">
         <div class="label">Sentiment</div>
-        <div class="value">—</div>
+        <div class="value">${subScores?.sentiment?.score != null ? subScores.sentiment.score + "%" : "—"}</div>
         <div class="weight">30% weight</div>
       </div>
     </div>
@@ -383,6 +383,7 @@ export async function assembleReport({ orgId, domain, days = 30, supabase, anthr
       domain,
       unifiedScore:  scoreData.unified_score,
       grade:         scoreData.grade,
+      subScores:     scoreData.sub_scores,
       technicalScan,
       competitor,
       contentGap,
