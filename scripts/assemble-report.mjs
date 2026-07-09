@@ -119,30 +119,26 @@ function renderContentGapSection(data) {
 }
 
 function renderActionPlanSection(plan) {
-  if (!plan?.phases?.length) return `<p class="no-data">Action plan not available.</p>`;
-  const phases = plan.phases.map(ph => {
-    const actions = (ph.actions ?? []).map(a => `
-      <li class="action-item priority-${a.priority ?? "medium"}">
+  const actions = plan?.actions ?? [];
+  if (!actions.length) return `<p class="no-data">Action plan not available.</p>`;
+
+  const items = actions.map((a, i) => `
+    <li class="action-item priority-${a.priority ?? "medium"}">
+      <div class="action-header">
+        <span class="action-num">${i + 1}</span>
         <span class="action-text">${a.action}</span>
-        <span class="action-meta">${a.owner ?? ""} · ${a.hours_estimate ?? ""}</span>
-        <p class="action-rationale">${a.rationale ?? ""}</p>
-      </li>`).join("");
-    return `
-      <div class="phase-block">
-        <div class="phase-header">
-          <span class="phase-num">Phase ${ph.phase}</span>
-          <span class="phase-title">${ph.title}</span>
-        </div>
-        <p class="phase-focus">${ph.focus ?? ""}</p>
-        <p class="phase-impact"><strong>Expected impact:</strong> ${ph.expected_impact ?? ""}</p>
-        <ul class="action-list">${actions}</ul>
-      </div>`;
-  }).join("");
-  const range = plan.expected_score_range;
-  const projection = range
-    ? `<div class="score-projection">After ${range.timeline_weeks} weeks: <strong>${range.low}–${range.high}/100</strong></div>`
+      </div>
+      <div class="action-meta">${a.owner ?? ""} · ${a.hours_estimate ?? ""}</div>
+      <p class="action-rationale">${a.rationale ?? ""}</p>
+      ${a.measurable_outcome ? `<div class="action-check"><strong>30 günde kontrol:</strong> ${a.measurable_outcome}</div>` : ""}
+    </li>`).join("");
+
+  const sc = plan.expected_score_change;
+  const projection = sc
+    ? `<div class="score-projection">30 gün sonra beklenen skor: <strong>${sc.from ?? "?"} → ${sc.to_low}–${sc.to_high}/100</strong></div>`
     : "";
-  return `${phases}${projection}`;
+
+  return `<ul class="action-list">${items}</ul>${projection}`;
 }
 
 function renderHTML({ domain, unifiedScore, grade, subScores, technicalScan, competitor, contentGap, actionPlan, generatedAt }) {
@@ -242,6 +238,9 @@ function renderHTML({ domain, unifiedScore, grade, subScores, technicalScan, com
     .action-meta{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:6px}
     .action-rationale{font-size:12px;color:#64748b;margin:0}
     .score-projection{margin-top:20px;text-align:center;font-size:15px;color:#94a3b8;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:16px}
+    .action-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:4px}
+    .action-num{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#1e293b;font-size:11px;font-weight:700;color:#94a3b8;display:flex;align-items:center;justify-content:center;margin-top:2px}
+    .action-check{font-size:12px;color:#22c55e;background:#052e16;border:1px solid #166534;border-radius:6px;padding:6px 10px;margin-top:8px}
     .no-data{color:#475569;font-style:italic;font-size:13px}
     /* Footer */
     .report-footer{text-align:center;padding:40px 0 24px;border-top:1px solid #1e293b;margin-top:16px}
@@ -314,7 +313,7 @@ function renderHTML({ domain, unifiedScore, grade, subScores, technicalScan, com
   <!-- Section 4: Action Plan -->
   <div class="section">
     <div class="section-title">Section 4</div>
-    <h2>Action Plan</h2>
+    <h2>Bu Ay İçin Aksiyon Planı</h2>
     ${actionPlan?.summary ? `<p style="color:#94a3b8;margin-bottom:20px">${actionPlan.summary}</p>` : ""}
     ${renderActionPlanSection(actionPlan)}
   </div>
