@@ -13,7 +13,8 @@
     "worker:agent-demo": "node scripts/agent-worker-demo.mjs",
     "worker:agent-health": "node scripts/agent-worker-health.mjs",
     "worker:engine": "node scripts/engine-worker.mjs",
-    "aggregate-scores": "node scripts/aggregate-scores.mjs"
+    "aggregate-scores": "node scripts/aggregate-scores.mjs",
+    "scan:technical": "node scripts/tech-scanner.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
