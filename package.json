@@ -16,7 +16,8 @@
     "aggregate-scores": "node scripts/aggregate-scores.mjs",
     "scan:technical": "node scripts/tech-scanner.mjs",
     "aggregate:competitors": "node scripts/competitor-aggregate.mjs",
-    "analyse:content-gap": "node scripts/content-gap.mjs"
+    "analyse:content-gap": "node scripts/content-gap.mjs",
+    "score:unified": "node scripts/score-unified.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
