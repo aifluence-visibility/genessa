@@ -61,6 +61,14 @@ Own brand/domain to detect: "${orgName}" (variations: "${ownBrandNorm}")
 Known competitors: ${competitorList}
 
 Extract every distinct brand, company, product, or service mentioned in the response.
+
+IMPORTANT — Do NOT extract these AI engine/platform names, they are infrastructure not competitors:
+ChatGPT, GPT, GPT-4, GPT-4o, GPT-3.5, GPT-4 Turbo, OpenAI, Claude, Anthropic,
+Perplexity, Perplexity AI, Google, Google AI, Gemini, Google Gemini, Bard,
+Bing, Bing AI, Microsoft, Microsoft Copilot, Copilot, Meta, Meta AI, LLaMA, Llama,
+Mistral, Mistral AI, Cohere, Grok, xAI, You.com, Pi, Amazon Alexa, Alexa,
+Apple Intelligence, Siri, DeepSeek.
+
 Return a JSON array ONLY (no markdown):
 [
   {

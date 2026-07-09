@@ -15,6 +15,28 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+// AI engines/platforms that must never appear in competitor lists.
+// The SQL RPC also filters these, but we apply the same list client-side
+// as a defensive layer for any data that slipped through.
+const AI_ENGINE_NAMES = new Set([
+  "chatgpt","gpt","gpt-4","gpt-4o","gpt-3.5","gpt-4 turbo","gpt-4o mini",
+  "openai","claude","anthropic",
+  "perplexity","perplexity ai",
+  "google","google ai","gemini","google gemini","bard",
+  "bing","bing ai","microsoft","microsoft copilot","copilot",
+  "meta","meta ai","llama","llama 2","llama 3",
+  "mistral","mistral ai","cohere","grok","xai",
+  "you.com","pi","amazon alexa","alexa","siri","apple intelligence","deepseek",
+]);
+
+function isAiEngine(name) {
+  const norm = name.toLowerCase().trim();
+  return AI_ENGINE_NAMES.has(norm)
+    || norm.startsWith("gpt-")
+    || norm.startsWith("gpt ")
+    || norm.startsWith("claude ");
+}
+
 /**
  * @param {{ orgId: string, reportId?: string, days?: number, supabase: object }} opts
  * @returns {Promise<object>}  content_json for the competitor_comparison section
@@ -28,7 +50,13 @@ export async function buildCompetitorComparison({ orgId, reportId, days = 30, su
 
   if (error) throw new Error(`get_competitor_comparison RPC failed: ${error.message}`);
 
-  const content = data ?? { period_days: days, engines: [], run_counts: {}, brands: [] };
+  const raw = data ?? { period_days: days, engines: [], run_counts: {}, brands: [] };
+
+  // Client-side defence: strip any AI engine names that slipped past the SQL filter
+  const content = {
+    ...raw,
+    brands: (raw.brands ?? []).filter(b => b.is_own_brand || !isAiEngine(b.name)),
+  };
 
   // Persist to report_sections if we have a report_id
   if (reportId) {
