@@ -29,9 +29,10 @@ const ENGINE_META: Record<string, { label: string; color: string }> = {
   claude:     { label: "Claude",     color: "#D97706" },
   gpt:        { label: "GPT-4o",     color: "#16A34A" },
   perplexity: { label: "Perplexity", color: "#7C3AED" },
+  gemini:     { label: "Gemini",     color: "#2563EB" },
 };
 
-const ENGINES = ["claude", "gpt", "perplexity"] as const;
+const ENGINES = ["claude", "gpt", "perplexity", "gemini"] as const;
 const LOCALES = ["en-US", "tr-TR"] as const;
 type Locale = typeof LOCALES[number];
 
@@ -145,6 +146,10 @@ function PeriodTable({
 
   // Unique periods, newest first
   const periods = [...new Set(forLocale.map((r) => r.period_start))].sort().reverse();
+  // Base engines always get a row; extra engines (gemini) only once they have data.
+  const tableEngines = ENGINES.filter(
+    (e) => e !== "gemini" || forLocale.some((r) => r.engine === e),
+  );
 
   if (periods.length === 0) {
     return (
@@ -175,7 +180,7 @@ function PeriodTable({
         </thead>
         <tbody>
           {periods.map((period) =>
-            ENGINES.map((engine, ei) => {
+            tableEngines.map((engine, ei) => {
               const row = forLocale.find((r) => r.period_start === period && r.engine === engine);
               const meta = ENGINE_META[engine];
               return (
@@ -188,7 +193,7 @@ function PeriodTable({
                 >
                   {ei === 0 && (
                     <td
-                      rowSpan={3}
+                      rowSpan={tableEngines.length}
                       style={{
                         padding: "12px 16px", verticalAlign: "middle",
                         fontSize: 12, color: "#374151", fontFamily: "var(--font-geist-mono)",

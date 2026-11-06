@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Engine worker: runs approved engine_prompts across Claude, GPT, and Perplexity.
+ * Engine worker: runs approved engine_prompts across Claude, GPT, Perplexity, and Gemini.
  * For each prompt it runs ENGINE_WORKER_REPEATS queries per engine, saves raw
  * responses to engine_runs, then extracts brand mentions into brand_mentions.
  *
@@ -10,6 +10,10 @@
  *   ANTHROPIC_API_KEY     — required for claude engine
  *   OPENAI_API_KEY        — required for gpt engine
  *   PERPLEXITY_API_KEY    — required for perplexity engine
+ *   GEMINI_API_KEY        — required for gemini engine (GOOGLE_API_KEY accepted as fallback)
+ *
+ *   An engine whose key is missing is skipped (logged once at startup and per
+ *   prompt that targets it); the worker keeps running the remaining engines.
  *
  *   ENGINE_WORKER_POLL_MS      — 0 = one-shot, >0 = loop interval (default 0)
  *   ENGINE_WORKER_BATCH        — max prompts per iteration (default 5)
@@ -18,7 +22,8 @@
  *   ENGINE_WORKER_STALE_MS     — mark pending runs older than this as failed (default 1800000 = 30m)
  *   ENGINE_CLAUDE_MODEL        — default: claude-haiku-4-5-20251001
  *   ENGINE_GPT_MODEL           — default: gpt-4o-mini
- *   ENGINE_PERPLEXITY_MODEL    — default: llama-3.1-sonar-small-128k-online
+ *   ENGINE_PERPLEXITY_MODEL    — default: sonar
+ *   ENGINE_GEMINI_MODEL        — default: gemini-2.5-flash
  *   ENGINE_TIMEOUT_MS          — per-engine call timeout (default 30000)
  *
  * Usage:
@@ -27,7 +32,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { runEngine, getEngineCredentials } from "./tools/run-engine.mjs";
+import { runEngine, getEngineCredentials, hasEngineKey, ALL_ENGINES } from "./tools/run-engine.mjs";
 import { extractBrandMentions } from "./tools/extract-brand-mentions.mjs";
 
 // ── Config ─────────────────────────────────────────────────────────────────────
@@ -74,12 +79,11 @@ function warn(msg) {
   console.warn(`[engine-worker] ${new Date().toISOString()} ${msg}`);
 }
 
+const DEFAULT_TARGET_ENGINES = ["claude", "gpt", "perplexity"];
+
 /** Returns true when the engine key needed for this engine is configured. */
 function engineEnabled(engine) {
-  if (engine === "claude") return Boolean(creds.anthropicKey);
-  if (engine === "gpt") return Boolean(creds.openaiKey);
-  if (engine === "perplexity") return Boolean(creds.perplexityKey);
-  return false;
+  return hasEngineKey(engine, creds);
 }
 
 // ── Stale run cleanup ──────────────────────────────────────────────────────────
@@ -99,11 +103,14 @@ async function failStaleRuns() {
 // ── Prompt deduplication ───────────────────────────────────────────────────────
 
 /**
- * Returns prompt IDs that are fully processed:
- * every enabled engine has >= repeats completed runs.
+ * Returns { doneIds, counts }:
+ *   doneIds — prompt IDs where every enabled engine has >= repeats completed runs
+ *   counts  — { promptId: { engine: completedCount } } so processPrompt only tops
+ *             up the missing engine×repeat slots (e.g. when a new engine such as
+ *             gemini is added to an already-processed prompt).
  */
 async function getAlreadyRunPromptIds(candidates) {
-  if (!candidates.length) return new Set();
+  if (!candidates.length) return { doneIds: new Set(), counts: {} };
   const ids = candidates.map((p) => p.id);
 
   const { data } = await supabase
@@ -121,19 +128,24 @@ async function getAlreadyRunPromptIds(candidates) {
 
   const doneIds = new Set();
   for (const p of candidates) {
-    const engines = (p.target_engines ?? ["claude", "gpt", "perplexity"]).filter(engineEnabled);
+    const engines = (p.target_engines ?? DEFAULT_TARGET_ENGINES).filter(engineEnabled);
     if (engines.length === 0) { doneIds.add(p.id); continue; }
     const pc = counts[p.id] ?? {};
     if (engines.every((e) => (pc[e] ?? 0) >= repeats)) doneIds.add(p.id);
   }
 
-  return doneIds;
+  return { doneIds, counts };
 }
 
 // ── Core processing ────────────────────────────────────────────────────────────
 
-async function processPrompt(prompt, orgName, competitorNames) {
-  const engines = (prompt.target_engines ?? ["claude", "gpt", "perplexity"]).filter(engineEnabled);
+async function processPrompt(prompt, orgName, competitorNames, completedCounts = {}) {
+  const targeted = prompt.target_engines ?? DEFAULT_TARGET_ENGINES;
+  const engines = targeted.filter(engineEnabled);
+  const skipped = targeted.filter((e) => !engineEnabled(e));
+  if (skipped.length) {
+    log(`Prompt ${prompt.id.slice(0, 8)}…: skipping ${skipped.join(", ")} — API key not configured.`);
+  }
 
   if (!engines.length) {
     warn(`Prompt ${prompt.id}: no enabled engines — check API keys.`);
@@ -143,7 +155,12 @@ async function processPrompt(prompt, orgName, competitorNames) {
   log(`Prompt ${prompt.id.slice(0, 8)}… "${prompt.prompt_text.slice(0, 60)}" — engines: ${engines.join(", ")} × ${repeats} repeats`);
 
   for (const engine of engines) {
-    for (let repeat = 1; repeat <= repeats; repeat++) {
+    const alreadyDone = completedCounts[engine] ?? 0;
+    if (alreadyDone >= repeats) {
+      log(`  ${engine}: already has ${alreadyDone}/${repeats} completed run(s) — skipping.`);
+      continue;
+    }
+    for (let repeat = alreadyDone + 1; repeat <= repeats; repeat++) {
       if (shuttingDown) return;
 
       // Insert pending run
@@ -228,7 +245,7 @@ async function runBatch() {
   }
 
   // Skip prompts where all enabled engines already have >= repeats completed runs
-  const doneIds = await getAlreadyRunPromptIds(candidates);
+  const { doneIds, counts: completedCounts } = await getAlreadyRunPromptIds(candidates);
   const due = candidates.filter((p) => !doneIds.has(p.id)).slice(0, batchSize);
 
   if (!due.length) {
@@ -279,7 +296,7 @@ async function runBatch() {
     if (shuttingDown) break;
     const orgName = orgMap[prompt.organization_id] ?? prompt.organization_id;
     const competitorNames = competitorMap[prompt.organization_id] ?? [];
-    await processPrompt(prompt, orgName, competitorNames);
+    await processPrompt(prompt, orgName, competitorNames, completedCounts[prompt.id] ?? {});
     processedOrgIds.add(prompt.organization_id);
   }
 
@@ -304,8 +321,12 @@ async function runBatch() {
 async function main() {
   log(
     `Starting — batch=${batchSize} repeats=${repeats} delay=${delayMs}ms poll=${pollMs}ms ` +
-    `engines: claude=${Boolean(creds.anthropicKey)} gpt=${Boolean(creds.openaiKey)} perplexity=${Boolean(creds.perplexityKey)}`,
+    `engines: ${ALL_ENGINES.map((e) => `${e}=${engineEnabled(e)}`).join(" ")}`,
   );
+  const disabled = ALL_ENGINES.filter((e) => !engineEnabled(e));
+  if (disabled.length) {
+    warn(`Engines without API key (will be skipped): ${disabled.join(", ")}`);
+  }
 
   await runBatch();
 

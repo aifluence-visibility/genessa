@@ -29,6 +29,7 @@ const ENGINE_LABELS: Record<string, string> = {
   claude: "Claude",
   gpt: "GPT-4o",
   perplexity: "Perplexity",
+  gemini: "Gemini",
 };
 
 const WA_CONTACT = `https://wa.me/905325788737?text=${encodeURIComponent("Hi! I'd like to add more prompts to my AI visibility monitoring.")}`;

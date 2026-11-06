@@ -1,14 +1,16 @@
 /**
  * Tool: run-engine
- * Sends a visibility query to Claude, GPT, or Perplexity and returns the raw text response.
+ * Sends a visibility query to Claude, GPT, Perplexity, or Gemini and returns the raw text response.
  *
  * Env (read by caller, passed as creds object):
  *   ANTHROPIC_API_KEY   — required for engine "claude"
  *   OPENAI_API_KEY      — required for engine "gpt"
  *   PERPLEXITY_API_KEY  — required for engine "perplexity"
+ *   GEMINI_API_KEY      — required for engine "gemini" (GOOGLE_API_KEY accepted as fallback)
  *   ENGINE_CLAUDE_MODEL    — default: claude-haiku-4-5-20251001
  *   ENGINE_GPT_MODEL       — default: gpt-4o-mini
- *   ENGINE_PERPLEXITY_MODEL — default: llama-3.1-sonar-small-128k-online
+ *   ENGINE_PERPLEXITY_MODEL — default: sonar
+ *   ENGINE_GEMINI_MODEL    — default: gemini-2.5-flash
  */
 
 const SYSTEM_PROMPT =
@@ -89,10 +91,52 @@ async function runOpenAICompatible(promptText, apiKey, model, baseUrl, timeoutMs
   return { text, model };
 }
 
+async function runGemini(promptText, apiKey, model, timeoutMs) {
+  const generationConfig = { maxOutputTokens: 600 };
+  // Flash models "think" by default and those tokens count against
+  // maxOutputTokens, which can leave the visible answer empty. Disable thinking
+  // on flash so the answer budget matches the other engines (600 tokens).
+  if (/flash/i.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
+
+  const res = await fetchWithTimeout(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [{ role: "user", parts: [{ text: promptText }] }],
+        generationConfig,
+      }),
+    },
+    timeoutMs,
+  );
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => `http_${res.status}`);
+    return { error: `gemini_http_${res.status}: ${err}`.slice(0, 500) };
+  }
+
+  const data = await res.json();
+  const candidate = data?.candidates?.[0];
+  const text = (candidate?.content?.parts ?? [])
+    .map((p) => (typeof p?.text === "string" ? p.text : ""))
+    .join("")
+    .trim();
+  if (!text) {
+    const reason = candidate?.finishReason ?? data?.promptFeedback?.blockReason ?? "unknown";
+    return { error: `gemini_empty_response: ${reason}` };
+  }
+  return { text, model };
+}
+
 /**
- * @param {"claude"|"gpt"|"perplexity"} engine
+ * @param {"claude"|"gpt"|"perplexity"|"gemini"} engine
  * @param {string} promptText
- * @param {object} creds  — keys: anthropicKey, openaiKey, perplexityKey, models, timeoutMs
+ * @param {object} creds  — keys: anthropicKey, openaiKey, perplexityKey, geminiKey, models, timeoutMs
  * @returns {Promise<{text?: string, model?: string, error?: string}>}
  */
 export async function runEngine(engine, promptText, creds) {
@@ -116,7 +160,30 @@ export async function runEngine(engine, promptText, creds) {
     return runOpenAICompatible(promptText, creds.perplexityKey, model, "https://api.perplexity.ai", timeoutMs);
   }
 
+  if (engine === "gemini") {
+    if (!creds.geminiKey) return { error: "missing_gemini_key" };
+    const model = creds.models?.gemini ?? "gemini-2.5-flash";
+    return runGemini(promptText, creds.geminiKey, model, timeoutMs);
+  }
+
   return { error: `unknown_engine: ${engine}` };
+}
+
+/** All engines the worker knows how to call. */
+export const ALL_ENGINES = ["claude", "gpt", "perplexity", "gemini"];
+
+/** Credential field required by each engine. */
+const ENGINE_KEY_FIELD = {
+  claude: "anthropicKey",
+  gpt: "openaiKey",
+  perplexity: "perplexityKey",
+  gemini: "geminiKey",
+};
+
+/** Returns true when the API key for this engine is configured. */
+export function hasEngineKey(engine, creds) {
+  const field = ENGINE_KEY_FIELD[engine];
+  return Boolean(field && creds[field]);
 }
 
 /** Read engine credentials from environment. */
@@ -125,10 +192,12 @@ export function getEngineCredentials() {
     anthropicKey: process.env.ANTHROPIC_API_KEY?.trim() || "",
     openaiKey: process.env.OPENAI_API_KEY?.trim() || process.env.GENESSA_OPENAI_API_KEY?.trim() || "",
     perplexityKey: process.env.PERPLEXITY_API_KEY?.trim() || "",
+    geminiKey: process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim() || "",
     models: {
       claude: process.env.ENGINE_CLAUDE_MODEL?.trim() || "claude-haiku-4-5-20251001",
       gpt: process.env.ENGINE_GPT_MODEL?.trim() || "gpt-4o-mini",
       perplexity: process.env.ENGINE_PERPLEXITY_MODEL?.trim() || "sonar",
+      gemini: process.env.ENGINE_GEMINI_MODEL?.trim() || "gemini-2.5-flash",
     },
     timeoutMs: Math.min(
       Math.max(parseInt(process.env.ENGINE_TIMEOUT_MS ?? "30000", 10) || 30_000, 5_000),

@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
         prompt_text: p.prompt_text,
         prompt_type: p.prompt_type,
         target_locale: locale,
-        target_engines: ["claude", "gpt", "perplexity"],
+        target_engines: ["claude", "gpt", "perplexity", "gemini"],
         is_active: true,
         is_user_approved: false,
       }))
