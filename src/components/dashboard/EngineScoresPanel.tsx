@@ -8,7 +8,10 @@ const ENGINE_META: Record<string, { label: string; color: string; bg: string; bo
   claude:     { label: "Claude",     color: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
   gpt:        { label: "GPT-4o",     color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0" },
   perplexity: { label: "Perplexity", color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE" },
+  gemini:     { label: "Gemini",     color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE" },
 };
+
+const ENGINE_ICON: Record<string, string> = { claude: "✦", gpt: "⊕", perplexity: "◉", gemini: "◆" };
 
 const LOCALES = ["en-US", "tr-TR"] as const;
 type Locale = typeof LOCALES[number];
@@ -37,8 +40,8 @@ function SentimentBar({
   );
 }
 
-function EngineCard({ row }: { row: EngineScoreRow | undefined; engine: string }) {
-  const meta = ENGINE_META[row?.engine ?? "claude"] ?? ENGINE_META["claude"];
+function EngineCard({ row, engine }: { row: EngineScoreRow | undefined; engine: string }) {
+  const meta = ENGINE_META[engine] ?? ENGINE_META["claude"];
   const cited = row ? Math.round((row.citation_rate ?? 0) * 100) : null;
 
   return (
@@ -60,7 +63,7 @@ function EngineCard({ row }: { row: EngineScoreRow | undefined; engine: string }
           background: meta.bg, border: `1px solid ${meta.border}`,
           fontSize: 13,
         }}>
-          {row?.engine === "claude" ? "✦" : row?.engine === "gpt" ? "⊕" : "◉"}
+          {ENGINE_ICON[engine] ?? "◉"}
         </span>
         <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{meta.label}</span>
       </div>
@@ -149,6 +152,8 @@ export default function EngineScoresPanel() {
   const byEngine = (engine: string) => forLocale.find((s) => s.engine === engine);
   const hasScores = scores.length > 0;
   const localeHasData = forLocale.length > 0;
+  // Gemini is shown only once it has data, so orgs without a Gemini key keep the 3-card layout.
+  const visibleEngines = ["claude", "gpt", "perplexity", ...(scores.some((s) => s.engine === "gemini") ? ["gemini"] : [])];
 
   if (loading) return null; // don't flash during initial page load
 
@@ -262,8 +267,8 @@ export default function EngineScoresPanel() {
               No data yet for {locale}
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            {(["claude", "gpt", "perplexity"] as const).map((engine) => (
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${visibleEngines.length}, 1fr)`, gap: 12 }}>
+            {visibleEngines.map((engine) => (
               <EngineCard key={engine} engine={engine} row={byEngine(engine)} />
             ))}
           </div>

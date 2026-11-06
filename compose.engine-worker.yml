@@ -1,6 +1,7 @@
-# Engine worker: runs approved prompts across Claude, GPT, and Perplexity.
+# Engine worker: runs approved prompts across Claude, GPT, Perplexity, and Gemini.
 # Prereq: set at minimum NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-# and at least one engine key (ANTHROPIC_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY).
+# and at least one engine key (ANTHROPIC_API_KEY, OPENAI_API_KEY, PERPLEXITY_API_KEY, GEMINI_API_KEY).
+# Engines without a key are skipped and logged; the worker keeps running.
 #
 # Example:
 #   set -a && source .env.local && set +a
@@ -21,10 +22,12 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       PERPLEXITY_API_KEY: ${PERPLEXITY_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       # Model overrides
       ENGINE_CLAUDE_MODEL: ${ENGINE_CLAUDE_MODEL:-claude-haiku-4-5-20251001}
       ENGINE_GPT_MODEL: ${ENGINE_GPT_MODEL:-gpt-4o-mini}
-      ENGINE_PERPLEXITY_MODEL: ${ENGINE_PERPLEXITY_MODEL:-llama-3.1-sonar-small-128k-online}
+      ENGINE_PERPLEXITY_MODEL: ${ENGINE_PERPLEXITY_MODEL:-sonar}
+      ENGINE_GEMINI_MODEL: ${ENGINE_GEMINI_MODEL:-gemini-2.5-flash}
       # Worker tuning
       ENGINE_WORKER_POLL_MS: ${ENGINE_WORKER_POLL_MS:-60000}
       ENGINE_WORKER_BATCH: ${ENGINE_WORKER_BATCH:-5}
